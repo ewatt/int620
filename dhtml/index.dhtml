@@ -1,0 +1,191 @@
+#!/bin/perl
+
+my $debug = 1;
+
+print STDERR "\n[!!!]\n\n[+++] Wubba-lubba-dub-dub!\n\n" if $debug; 
+
+# === module declarations ===
+
+use strict;
+use warnings;
+use Template;
+use DBI;
+use CGI;
+use Apache::Session::MySQL;
+
+if ($debug) {
+	use diagnostics;
+	use Data::Dumper;
+	use Carp qw(croak);
+	use Scalar::Util qw(reftype);
+}
+
+# set path to local modules
+use lib qw(/srv/Project/modules);
+use DatabaseConfiguration;
+
+
+# === constant declarations === 
+
+use constant TEMPLATELIB	=> "/srv/Project/tt2";
+use constant TEMPLATE		=> "pageMain.tt2";
+
+
+# === variable declarations ===
+
+my (
+	$cgiObject,
+	%ttConfig,
+	$ttObject,
+	$ttParameters,
+	$loginUID,
+	$jsonData,
+	$cookieUID,
+	$cookieSession,
+	%session,
+	$sessionID,
+);
+
+
+# === function declarations
+
+# check login credentials in the database
+sub CheckLogin {
+
+	# get username and password parameters
+	my $username = $cgiObject->param("username");
+	my $password = $cgiObject->param("password");
+	
+	# create database object
+	my $dbObject = DatabaseConfiguration::ConnectDatabase;
+	
+	# create sql query statement
+	my $sqlQuery = qq~SELECT id FROM tbl_plebs WHERE pleb=? AND code=?~;
+	
+	# prepare sql query
+	my $sqlObject = $dbObject->prepare($sqlQuery)
+		or die $dbObject->errstr;
+	
+	# execute sql query
+	$sqlObject->execute($username,$password)
+		or die $sqlObject->errstr;
+	
+	# retrieve data 
+	my ($userID) = $sqlObject->fetchrow_array;
+	
+	return $userID;
+
+} #CheckLogin
+
+
+
+# === begin script execution
+
+# create new CGI object
+$cgiObject = new CGI;
+
+# can I have a cookie?
+if ($cgiObject->cookie()) {
+	# this is a huge security hole.
+	# but I don't care, you have cookies.
+	if ($cgiObject->cookie('uid')) {
+		$loginUID = $cgiObject->cookie('uid');
+	}
+}
+
+# check for CGI parameters
+if ($cgiObject->param()) {
+	# check for username and password parameters
+	if ($cgiObject->param("username") and $cgiObject->param("password")) {
+		$loginUID = CheckLogin;
+		if ($loginUID) {
+			# c'mon in
+			$jsonData = qq{{"success" : "login is successful", "userid" : "$loginUID"}};
+			# want a cookie?
+			$cookieUID =
+				$cgiObject->cookie(	-name	=> 'uid',
+									-value	=> $loginUID,
+									-expires=> '+1h',
+							);
+		}
+		else {
+			# access denied
+			$jsonData = qq{{"error" : "username or password is incorrect"}};
+		}
+	}
+}
+
+
+# is there json data to return to ajax?
+if ($jsonData) {
+	# return the json string
+	print $cgiObject->header(-type	=> 'application/json',
+							-charset=> 'utf-8',
+							-cookie	=> $cookieUID,
+					);
+	print $jsonData;
+}
+# is this your first time?
+else {
+	# create a new session
+	my $dbObject = DatabaseConfiguration::ConnectDatabase;
+	tie %session, 'Apache::Session::MySQL', $sessionID,
+		{	Handle => $dbObject,
+			LockHandle => $dbObject,
+			#DataSource	=> "DBI:mysql:db_access;localhost;3306",
+			#UserName	=> "db_user",
+			#Password	=> "db_pass",
+		};
+	
+	# store current epoch time in session as first visit.
+	# first visit, last visit and count of visits
+	$session{first} = $session{last} = time;
+	$session{count} = 0;
+	
+	$sessionID = $session{ _session_id };
+	
+	# create session cookie
+	$cookieSession =
+		$cgiObject->cookie(	-name => 'session',
+							-value=> $sessionID,
+							-expires=> '',
+					);
+	
+	# create template toolkit object configuration
+	%ttConfig = (
+		INCLUDE_PATH	=> [ TEMPLATELIB ],
+		ENCODING		=> 'utf8',
+		PRE_CHOMP		=> 1,
+		POST_CHOMP		=> 1,
+	);
+	
+	# create template toolkit object
+	$ttObject = Template->new( \%ttConfig );
+	
+	# create template toolkit parameters list
+	$ttParameters = {
+		'page'	=> {
+			'self'	=> '/index.dhtml',
+			'css'	=> '/css/style.css',
+			'title'	=> 'title-of-page',
+			'header'=> 'Login',
+			'copy'	=> '2015',
+			'author'=> 'Ian Watt',
+		},
+		#'data'	=> {
+		#	'loginUID'	=> $loginUID,	# this won't exist on first visit.
+		#},
+	};
+	
+	print $cgiObject->header(-type	=> 'text/html',
+							 -cookie=> $cookieSession);
+	
+	$ttObject->process ( TEMPLATE, $ttParameters )
+		or die ( $ttObject->error() );
+}
+	
+if ($debug) {
+	print STDERR Dumper( $loginUID );
+}
+
+__END__

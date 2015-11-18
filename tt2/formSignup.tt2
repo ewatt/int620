@@ -1,0 +1,29 @@
+<section id='signupPage' data-role='page' data-theme='a'>
+<section id='signupForm' data-role='form' data-theme='a'>
+	<div id='signupResult' style='display:none;'></div>
+	<form id='signupForm' name='registerForm' method='post' action=''>
+		<fieldset>
+			<legend>Sign-up</legend>
+			<p>
+				<label for='username'>Desired Username</label>
+				<br />
+				<input type='text' id='username' name='username' class='text' size='20' />
+			</p>
+			<p>
+				<label for='password1'>Choose a Password</label>
+				<br />
+				<input type='text' id='password1' name='password1' class='text' size='20' />
+			</p>
+			<p>
+				<label for='password2'>Confirm Password</label>
+				<br />
+				<input type='text' id='password2' name='password2' class='text' size='20' />
+			</p>
+			<p>
+				<button type='submit' class='btn btn-primary'>Sign up</button>
+				<button type='submit' class='btn btn-primary'>Login</button>
+			</p>
+		</fieldset>
+	</form>
+</section>
+</section>

@@ -1,0 +1,37 @@
+#!/bin/perl
+use CGI;
+use DBI;
+use strict;
+use warnings;
+
+use constant {
+	DBDATABASE	=> "db_access",
+	DBHOSTNAME	=> "localhost",
+	DBUSERNAME	=> "db_username",
+	DBPASSWORD	=> "db_P\@ssw0rd",
+};
+
+# read the CGI params
+my $cgi = CGI->new;
+my $username = $cgi->param("u");
+my $password = $cgi->param("p");
+
+# connect to the database
+my $dbh = DBI->connect("DBI:mysql:database=".DBDATABASE.";host=".DBHOSTNAME.";port=3389",DBUSERNAME,DBPASSWORD)
+	or die $DBI::errstr;
+	
+# check the username and password in the database
+my $statement = qq~SELECT id FROM tbl_plebs WHERE pleb=? AND code=?~;
+my $sth = $dbh->prepare($statement)
+	or die $dbh->errstr;
+my ($userID) = $sth->fetchrow_array;
+
+# create a JSON string according to the database result
+my $json = ($userID) ?
+	qq{{"success" : "login is successful", "userid" : "$userID"}} :
+	qq{{"error" : "username or password is incorrect"}};
+	
+# return JSON string
+print $cgi->header(-type => "application/json", -charset => "utf-8");
+print $json;
+
