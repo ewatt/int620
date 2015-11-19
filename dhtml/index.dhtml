@@ -136,7 +136,7 @@ $cgiObject = new CGI;
 if ($cgiObject->cookie()) {
 	# can I have a session cookie?
 	if ($cgiObject->cookie('session')) {
-		$cookieSession = $cgiObject->cookie('session');
+		$sessionID = $cgiObject->cookie('session');
 	}
 }
 
@@ -232,7 +232,7 @@ else {
 }
 	
 if ($debug) {
-	print STDERR Dumper( $loginUID );
+	print STDERR Dumper( $sessionID );
 }
 
 __END__
