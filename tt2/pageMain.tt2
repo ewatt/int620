@@ -1,18 +1,12 @@
 [% INCLUDE htmlHeader.tt2 %]
-<section id='pageMain' data-role='page' data-theme='a'>
 	
-[% INCLUDE sectionHeader.tt2 %]
+[% INCLUDE pageHeader.tt2 %]
 
-	<article data-role='main' class='ui-content'>
-
-	[% INCLUDE formLogin.tt2 %]
+[% INCLUDE formLogin.tt2 %]
 	
-	[% INCLUDE formSignup.tt2 %]
+[% INCLUDE formSignup.tt2 %]
 
-	</article>
-
-[% INCLUDE sectionFooter.tt2 %]
-</section>
+[% INCLUDE pageFooter.tt2 %]
 
 [% INCLUDE htmlFooter.tt2 %]
 
