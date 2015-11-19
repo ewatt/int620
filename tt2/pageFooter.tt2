@@ -1,3 +1,3 @@
-<div class='page-footer' style='text-align:right'>
+<footer class='page-footer container-fluid text-right'>
 	<h6>&copy;[% page.copy %] &bull; [% page.author %] </h6>
-</div>
+</footer>

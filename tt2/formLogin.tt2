@@ -1,4 +1,4 @@
-<div id='loginPage' class='container'>
+<div id='loginPage' class='container' style='margin-top:75px'>
 	<div class='alert alert-danger fade in' id='loginResult' style='display:none;'>
 		<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
 	</div>

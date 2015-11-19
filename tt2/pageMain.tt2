@@ -2,9 +2,13 @@
 	
 [% INCLUDE pageHeader.tt2 %]
 
+[%# INCLUDE pageLeft.tt2 %]
+
 [% INCLUDE formLogin.tt2 %]
 	
 [% INCLUDE formSignup.tt2 %]
+
+[%# INCLUDE pageRight.tt2 %]
 
 [% INCLUDE pageFooter.tt2 %]
 
