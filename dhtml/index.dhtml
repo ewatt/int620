@@ -1,7 +1,11 @@
 #!/bin/perl
 
+# === debugging options ===
+
+# toggle debugging
 my $debug = 1;
 
+# this line helps in locating last script execution output in logs
 print STDERR "\n[!!!]\n\n[+++] Wubba-lubba-dub-dub!\n\n" if $debug; 
 
 # === module declarations ===
@@ -10,8 +14,9 @@ use strict;
 use warnings;
 use Template;
 use DBI;
-use CGI;
+use CGI qw(:standard);
 use Apache::Session::MySQL;
+use Digest::SHA1 qw(sha1_base64);
 
 if ($debug) {
 	use diagnostics;
@@ -29,6 +34,7 @@ use DatabaseConfiguration;
 
 use constant TEMPLATELIB	=> "/srv/Project/tt2";
 use constant TEMPLATE		=> "pageMain.tt2";
+use constant SALT			=> "58b4a401-3b7a-4c92-aaaf-8273c74752ed";
 
 
 # === variable declarations ===
@@ -56,6 +62,16 @@ sub CheckLogin {
 	my $username = $cgiObject->param("username");
 	my $password = $cgiObject->param("password");
 	
+	#TODO: untaint username, password
+	
+	# salt is uuid combined with username to make it
+	# unique for users who have the same passwords.	
+	my $SaltHashPass = sha1_base64($password,SALT.$username);
+	
+	print STDERR "\n[+] \$username = $username" if ($debug);
+	print STDERR "\n[+] \$password = $password" if ($debug);
+	print STDERR "\n[+] \$SaltHashPass = $SaltHashPass" if ($debug);
+	
 	# create database object
 	my $dbObject = DatabaseConfiguration::ConnectDatabase;
 	
@@ -67,7 +83,7 @@ sub CheckLogin {
 		or die $dbObject->errstr;
 	
 	# execute sql query
-	$sqlObject->execute($username,$password)
+	$sqlObject->execute($username,$SaltHashPass)
 		or die $sqlObject->errstr;
 	
 	# retrieve data 
@@ -78,6 +94,38 @@ sub CheckLogin {
 } #CheckLogin
 
 
+sub CheckSignup {
+	my $username = $cgiObject->('username');
+	my $password1 = $cgiObject->('password1');
+	my $password2 = $cgiObject->('password2');
+	
+	# this will only be set on successful sign up.
+	my $userID = undef;
+	
+	# untaint variables
+	
+	# is username available?
+		# create database object
+		# create sql query statement
+		# prepare sql query
+		# execute sql query
+	# else return error
+	
+	# are password1 and password2 the same?
+		# salt password
+		# create database object
+		# create sql insert statement
+			# create user record
+		# prepare sql insert
+		# execute sql insert
+	# else return error
+	
+	# return the userid
+	return 1;
+	
+} #CheckSignup
+
+
 
 # === begin script execution
 
@@ -86,10 +134,9 @@ $cgiObject = new CGI;
 
 # can I have a cookie?
 if ($cgiObject->cookie()) {
-	# this is a huge security hole.
-	# but I don't care, you have cookies.
-	if ($cgiObject->cookie('uid')) {
-		$loginUID = $cgiObject->cookie('uid');
+	# can I have a session cookie?
+	if ($cgiObject->cookie('session')) {
+		$cookieSession = $cgiObject->cookie('session');
 	}
 }
 
@@ -101,12 +148,12 @@ if ($cgiObject->param()) {
 		if ($loginUID) {
 			# c'mon in
 			$jsonData = qq{{"success" : "login is successful", "userid" : "$loginUID"}};
-			# want a cookie?
-			$cookieUID =
-				$cgiObject->cookie(	-name	=> 'uid',
-									-value	=> $loginUID,
-									-expires=> '+1h',
-							);
+			# the apache session id is used instead of this.
+			#$cookieUID =
+			#	$cgiObject->cookie(	-name	=> 'uid',
+			#						-value	=> $loginUID,
+			#						-expires=> '+1h',
+			#				);
 		}
 		else {
 			# access denied
@@ -121,11 +168,11 @@ if ($jsonData) {
 	# return the json string
 	print $cgiObject->header(-type	=> 'application/json',
 							-charset=> 'utf-8',
-							-cookie	=> $cookieUID,
+							#-cookie	=> $cookieUID,
 					);
 	print $jsonData;
 }
-# is this your first time?
+# is this your first time here?
 else {
 	# create a new session
 	my $dbObject = DatabaseConfiguration::ConnectDatabase;
