@@ -73,18 +73,20 @@ sub CheckLogin {
 	my $password = $cgiObject->param("password");
 	
 	# untaint $username, only allow [azAZ09.-_], max 45 chars
-	$username = $1 if ($username =~ /^([\w\-\.]{,45})$/a) or return undef;
+	$username = $1 if ($username =~ /^([\w\-\.]{5,45})$/a) or return undef;
 	
 	# untaint $password, allow any non whitespace, max 45 chars
-	$password = $1 if ($password =~ /^([\S]{,45})$/a) or return undef;
+	$password = $1 if ($password =~ /^([\S]{8,45})$/a) or return undef;
 	
 	# salt is uuid combined with username to make it
 	# unique for users who have the same passwords.	
 	my $SaltHashPass = sha1_base64($password,HASHSALT.$username);
 	
-	warn "[+] \$username = $username" if ($debug);
-	warn "[+] \$password = $password" if ($debug);
-	warn "[+] \$SaltHashPass = $SaltHashPass" if ($debug);
+	if ($debug) {
+		warn "[+] \$username = $username";
+		warn "[+] \$password = $password";
+		warn "[+] \$SaltHashPass = $SaltHashPass";
+	}
 	
 	# create database object
 	my $dbObject = DatabaseConfiguration::ConnectDatabase;
@@ -103,39 +105,100 @@ sub CheckLogin {
 	# retrieve data 
 	my ($userID) = $sqlObject->fetchrow_array;
 	
+	# $userID is undef if login failed.
 	return $userID;
 
 } #CheckLogin
 
 
 sub CheckSignup {
+	my $ReturnCode = undef;
 	my $username = $cgiObject->('username');
 	my $password1 = $cgiObject->('password1');
 	my $password2 = $cgiObject->('password2');
 	
-	# this will only be set on successful sign up.
-	my $userID = undef;
+	# untaint $username, only allow [azAZ09.-_], max 45 chars
+	$username = $1 if ($username =~ /^([\w\-\.]{5,45})$/a) or $ReturnCode = 65;
 	
-	# untaint variables
+	# untaint $password, allow all printable ASCII, max 45 chars
+	$password1 = $1 if ($password1 =~ /^([ -~]{8,45})$/a) or $ReturnCode = 64;
+	$password2 = $1 if ($password2 =~ /^([ -~]{8,45})$/a) or $ReturnCode = 63;
 	
-	# is username available?
-		# create database object
-		# create sql query statement
-		# prepare sql query
-		# execute sql query
-	# else return error
+	if ($debug) {
+		warn "[+] \$username = $username";
+		warn "[+] \$password1 = $password1";
+		warn "[+] \$password2 = $password2";
+		#warn "[+] \$SaltHashPass = $SaltHashPass";
+	}
 	
-	# are password1 and password2 the same?
-		# salt password
-		# create database object
-		# create sql insert statement
-			# create user record
-		# prepare sql insert
-		# execute sql insert
-	# else return error
+	# create database object
+	my $dbObject = DatabaseConfiguration::ConnectDatabase;
 	
-	# return the userid
-	return 1;
+	# create sql query statement
+	my $sqlQuery = qq~SELECT id FROM tbl_plebs WHERE pleb=?~;
+	
+	# prepare sql query
+	my $sqlObject = $dbObject->prepare($sqlQuery)
+		or die $dbObject->errstr;
+	
+	# execute sql query
+	$sqlObject->execute($username)
+		or die $sqlObject->errstr;
+	
+	# is username taken?
+	my ($userID) = $sqlObject->fetchrow_array;
+	
+	# username must be available...
+	if (undef $userID) {
+
+		# password1 and password2 must be the same...
+		if ($password1 eq $password2) {
+			
+			#TODO: still need length requirement.
+			# password must meet complexity requirements...
+			if ($password1 =~ /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W])$/) {
+				
+				# all requirement tests passed, new user can sign up.
+				my $password = $1;
+			
+				# salt is uuid combined with username to make it
+				# unique for users who have the same passwords.	
+				my $SaltHashPass = sha1_base64($password,HASHSALT.$username);
+		
+				# create database object
+				# or just reuse the one we already have.
+				
+				# create sql insert statement
+				$sqlQuery = qq~INSERT INTO tbl_plebs (pleb,code) VALUES (?,?)~;
+				
+				# prepare sql insert
+				$sqlObject = $dbObject->prepare($sqlQuery)
+					or die $dbObject->errstr;
+				
+				# execute sql insert
+				$sqlObject->execute($username,$password)
+					or die $sqlObject->errstr;
+				
+				# new user sign up complete!
+				$ReturnCode = 0;
+			}
+			else {
+				# failed complexity requirement
+				$ReturnCode = 126;
+			}
+		}
+		else {
+			# failed matching requirement
+			$ReturnCode = 125;
+		}
+	}
+	else {
+		# failed username availability requirement
+		$ReturnCode = 124;
+	}
+	
+	# return $ReturnCode
+	return $ReturnCode;
 	
 } #CheckSignup
 
