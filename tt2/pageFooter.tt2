@@ -1,0 +1,3 @@
+<div class='page-footer' style='text-align:right'>
+	<h6>&copy;[% page.copy %] &bull; [% page.author %] </h6>
+</div>
