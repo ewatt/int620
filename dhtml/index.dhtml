@@ -1,4 +1,13 @@
-#!/bin/perl
+#!/bin/perl -T
+#
+# by Ian Watt, 2015-11-15
+# iwatt@myseneca.ca
+# https://github.com/ewatt/INT620
+#
+
+# untaint environment. http://perldoc.perl.org/perlsec.html
+delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
+
 
 # === debugging options ===
 
@@ -6,7 +15,8 @@
 my $debug = 1;
 
 # this line helps in locating last script execution output in logs
-print STDERR "\n[!!!]\n\n[+++] Wubba-lubba-dub-dub!\n\n" if $debug; 
+warn "[!!!]\n\n[+++] Wubba-lubba-dub-dub!\n\n" if $debug; 
+
 
 # === module declarations ===
 
@@ -34,7 +44,7 @@ use DatabaseConfiguration;
 
 use constant TEMPLATELIB	=> "/srv/Project/tt2";
 use constant TEMPLATE		=> "pageMain.tt2";
-use constant SALT			=> "58b4a401-3b7a-4c92-aaaf-8273c74752ed";
+use constant HASHSALT		=> "58b4a401-3b7a-4c92-aaaf-8273c74752ed";
 
 
 # === variable declarations ===
@@ -62,15 +72,19 @@ sub CheckLogin {
 	my $username = $cgiObject->param("username");
 	my $password = $cgiObject->param("password");
 	
-	#TODO: untaint username, password
+	# untaint $username, only allow [azAZ09.-_], max 45 chars
+	$username = $1 if ($username =~ /^([\w\-\.]{,45})$/a) or return undef;
+	
+	# untaint $password, allow any non whitespace, max 45 chars
+	$password = $1 if ($password =~ /^([\S]{,45})$/a) or return undef;
 	
 	# salt is uuid combined with username to make it
 	# unique for users who have the same passwords.	
-	my $SaltHashPass = sha1_base64($password,SALT.$username);
+	my $SaltHashPass = sha1_base64($password,HASHSALT.$username);
 	
-	print STDERR "\n[+] \$username = $username" if ($debug);
-	print STDERR "\n[+] \$password = $password" if ($debug);
-	print STDERR "\n[+] \$SaltHashPass = $SaltHashPass" if ($debug);
+	warn "[+] \$username = $username" if ($debug);
+	warn "[+] \$password = $password" if ($debug);
+	warn "[+] \$SaltHashPass = $SaltHashPass" if ($debug);
 	
 	# create database object
 	my $dbObject = DatabaseConfiguration::ConnectDatabase;
@@ -232,7 +246,7 @@ else {
 }
 	
 if ($debug) {
-	print STDERR Dumper( $sessionID );
+	warn "\n[+] ",Dumper( $sessionID );
 }
 
 __END__
