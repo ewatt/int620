@@ -22,7 +22,7 @@ $(document).ready(function(){
 				
 				// if script call was not successful
 				error: function(XMLHttpRequest, textStatus, errorThrown) {
-					$('div#loginResult').text("responseText: " + XMLHttpRequest.responseText
+					$('div#loginResult').append("responseText: " + XMLHttpRequest.responseText
 						+ ", textStatus: " + textStatus
 						+ ", errorThrown: " + errorThrown);
 					$('div#loginResult').addClass("error");
@@ -31,12 +31,12 @@ $(document).ready(function(){
 				// data contains the JSON values returned by the perl script
 				success: function(data) {
 					if (data.error) { // script returned error
-						$('div#loginResult').text("data.error: " + data.error);
+						$('div#loginResult').append("data.error: " + data.error);
 						$('div#loginResult').addClass("error");
 					} //if
 					else { // login was successful
 						$('form#loginForm').hide();
-						$('div#loginResult').text("data.success: " + data.success
+						$('div#loginResult').append("data.success: " + data.success
 							+ ", data.userid: " + data.userid);
 						$('div#loginResult').addClass("success");
 					} //else
@@ -44,7 +44,7 @@ $(document).ready(function(){
 			}); //ajax
 		} //if
 		else {
-			$('div#loginResult').text("Enter username and password");
+			$('div#loginResult').append("Enter username and password");
 			$('div#loginResult').addClass("error");
 		} //else
 		$('div#loginResult').fadeIn();
