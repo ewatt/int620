@@ -123,11 +123,11 @@ sub CheckSignup {
 	my $confirm  = $cgiObject->param("signupConfirm");
 	
 	# untaint $username, only allow [azAZ09.-_], max 45 chars
-	$username = $1 if ($username =~ /^([\w\-\.]{5,45})$/a) or $ReturnCode = 65;
+	$username = $1 if ($username =~ /^([\w\-\.]{5,45})$/a);
 	
 	# untaint $password, allow all printable ASCII, max 45 chars
-	$password = $1 if ($password =~ /^([ -~]{8,45})$/a) or $ReturnCode = 64;
-	$confirm  = $1 if ($confirm  =~ /^([ -~]{8,45})$/a) or $ReturnCode = 63;
+	$password = $1 if ($password =~ /^([ -~]{8,45})$/a);
+	$confirm  = $1 if ($confirm  =~ /^([ -~]{8,45})$/a);
 	
 	if ($debug) {
 		warn "[!] sub CheckSignup";
@@ -155,15 +155,17 @@ sub CheckSignup {
 	my ($userID) = $sqlObject->fetchrow_array;
 	
 	# username must be available...
-	if (undef $userID) {
+	if (not $userID) {
 
 		# password1 and password2 must be the same...
 		if ($password eq $confirm) {
 			
-			#TODO: still need length requirement.
+			#TODO: make this actually work.
 			# password must meet complexity requirements...
-			if ($password =~ /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W])$/) {
-				
+			#if ($password =~ /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W])$/) {
+			#if ($password =~ /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])$/) {
+			if ($password =~ /^(.*)$/) {
+								
 				# all requirement tests passed, new user can sign up.
 				$password = $1;
 			
@@ -182,25 +184,26 @@ sub CheckSignup {
 					or die $dbObject->errstr;
 				
 				# execute sql insert
-				$sqlObject->execute($username,$password)
+				$sqlObject->execute($username,$SaltHashPass)
 					or die $sqlObject->errstr;
 				
 				# new user sign up complete!
-				$ReturnCode = 0;
+				warn "[+] new user sign up complete!" if ($debug);
+				$ReturnCode = 1;
 			}
 			else {
 				# failed complexity requirement
-				$ReturnCode = 126;
+				warn "[-] failed complexity requirement!" if ($debug);
 			}
 		}
 		else {
 			# failed matching requirement
-			$ReturnCode = 125;
+			warn "[-] failed matching requirement!" if ($debug);
 		}
 	}
 	else {
 		# failed username availability requirement
-		$ReturnCode = 124;
+		warn "[-] failed username availability requirement!" if ($debug);
 	}
 	
 	# return $ReturnCode
@@ -223,10 +226,7 @@ if ($cgiObject->cookie()) {
 	}
 }
 
-if ($debug) {
-	warn "[+]\n ",Dumper($cgiObject);
-}
-
+#warn "[+]\n ",Dumper($cgiObject) if ($debug);
 
 # check for CGI parameters
 if ($cgiObject->param()) {
@@ -244,12 +244,18 @@ if ($cgiObject->param()) {
 	}
 	# check for username, password1 and password2
 	if ($cgiObject->param("signupUsername") and $cgiObject->param("signupPassword") and $cgiObject->param("signupConfirm")) {
-		$loginUID = CheckSignup;
-		if ($loginUID) {
+		
+		warn "[!] entering CheckSignup" if ($debug);
+				
+		if (CheckSignup) {
 			# signup successful
+			warn "[+] CheckSignup was successful" if ($debug);
+			$jsonData = qq{{"success" : "signup was successful"}};
 		}
 		else {
 			# signup unsuccessful
+			warn "[-] CheckSignup was unsuccessful" if ($debug);
+			$jsonData = qq{{"error" : "username is not available"}};
 		}
 	}
 }

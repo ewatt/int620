@@ -29,7 +29,7 @@ $(document).ready(function(){
 						$('div#loginInvalid').fadeIn();
 					} //if
 					else { // login was successful
-						$('div#login').toggle();
+						$('div#login').modal('hide');
 						$('div#loginSuccess').fadeIn();
 					} //else
 				} //success
