@@ -1,0 +1,64 @@
+<div id='LoginSignup' class='container center-block' style='width:75%;margin-top:75px;'>
+	<div class='alert alert-danger fade in' id='loginResult' style='display:none'>
+		<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+		<!-- error messages each need their own hidden div -->
+	</div>
+	<div class='alert alert-danger fade in' id='' style='display:none'>
+		<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+		<!-- error message -->
+	</div>
+	<div class='container well'>
+		<div class='container col-sm-6' style='padding-right:35px'>
+		<form class='form-horizontal' role='form' id='loginForm' name='loginForm' method='post' action=''>
+			<legend>Log In</legend>
+			<div class='form-group'>
+				<label class='control-label col-sm-4' for='loginUsername'>Username</label>
+				<div class='col-sm-8'>
+					<input type='text' id='loginUsername' name='loginUsername' class='form-control' size='20' />
+				</div>
+			</div>
+			<div class='form-group'>
+				<label class='control-label col-sm-4' for='loginPassword'>Password</label>
+				<div class='col-sm-8'>
+					<input type='password' id='loginPassword' name='loginPassword' class='form-control' size='20' />
+				</div>
+			</div>
+			<div class='form-group'>
+				<div class='col-sm-8'>&nbsp;</div>
+				<div class='col-sm-4'>
+					<button type='submit' id='loginButton' name='loginButton' class='form-control btn btn-primary'>Log In</button>
+				</div>
+			</div>
+		</form>
+		</div>
+		<div class='container col-sm-6' style='padding-left:35px;border-left:1px solid #e3e3e3;'>
+		<form class='form-horizontal' role='form' id='signupForm' name='signupForm' method='post' action=''>
+			<legend>Sign Up</legend>
+			<div class='form-group'>
+				<label class='control-label col-sm-4' for='signupUsername'>Desired Username</label>
+				<div class='col-sm-8'>
+					<input type='text' id='signupUsername' name='signupUsername' class='form-control' size='20' />
+				</div>
+			</div>
+			<div class='form-group'>
+				<label class='control-label col-sm-4' for='signupPassword1'>Choose a Password</label>
+				<div class='col-sm-8'>
+					<input type='password' id='signupPassword1' name='signupPassword1' class='form-control' size='20' />
+				</div>
+			</div>
+			<div class='form-group'>
+				<label class='control-label col-sm-4' for='signupPassword2'>Confirm Password</label>
+				<div class='col-sm-8'>
+					<input type='password' id='signupPassword2' name='signupPassword2' class='form-control' size='20' />
+				</div>
+			</div>
+			<div class='form-group'>
+				<div class='col-sm-8'>&nbsp;</div>
+				<div class='col-sm-4'>
+					<button type='submit' id='signupButton' name='signupButton' class='form-control btn btn-success'>Sign Up</button>
+				</div>
+			</div>
+		</form>
+		</div>
+	</div>
+</div>
