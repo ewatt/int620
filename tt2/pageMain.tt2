@@ -2,14 +2,31 @@
 	
 [% INCLUDE pageHeader.tt2 %]
 
-[%# INCLUDE pageLeft.tt2 %]
-
-[% INCLUDE formLoginSignup.tt2 %]
-	
-[%# INCLUDE pageRight.tt2 %]
+<div class='container-fluid text-center'>
+	<div class='row content'>
+		[%# INCLUDE pageLeft.tt2 %]
+		<div class='col-sm-8 text-left'>
+			<div class='container center-block' style='height:400px'>
+				<div class='alert alert-success fade in' id='loginSuccess' style='display:none'>
+					<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+					<p>Log In was successful!</p>
+				</div>
+				<ul class='nav navbar-nav'>
+					<li><a href='#page1'><span class='glyphicon glyphicon-backward'></span></a></li>
+					<li><a href='#page2'><span class='glyphicon glyphicon-play'></span></a></li>
+					<li><a href='#page3'><span class='glyphicon glyphicon-pause'></span></a></li>
+					<li><a href='#page4'><span class='glyphicon glyphicon-stop'></span></a></li>
+					<li><a href='#page5'><span class='glyphicon glyphicon-forward'></span></a></li>
+				</ul>
+			</div>
+		</div>
+		[%# INCLUDE pageRight.tt2 %]
+	</div>
+</div>
 
 [% INCLUDE pageFooter.tt2 %]
 
 [% INCLUDE htmlFooter.tt2 %]
 
-<!-- #EOF -->
+[% INCLUDE formLogin.tt2 %]
+[% INCLUDE formSignup.tt2 %]

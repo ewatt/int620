@@ -1,14 +1,12 @@
 $(document).ready(function(){
 	// when loginForm is submitted...
 	$("form#loginForm").submit(function() {
-		// get username
-		var username = $('#username').val();	//.attr('value');
-		// get password
-		var password = $('#password').val();	//.attr('value');
-			
-		//alert(username);
-		//alert(password);
 		
+		// get username
+		var username = $('#loginUsername').val();	//.attr('value');
+		// get password
+		var password = $('#loginPassword').val();	//.attr('value');
+			
 		// if values are not empty
 		if (username && password) {
 			$.ajax({
@@ -18,34 +16,27 @@ $(document).ready(function(){
 				dataType: "json",
 				
 				// send username and password as parameters to perl script
-				data: "username=" + username + "&password=" + password,
+				data: "loginUsername=" + username + "&loginPassword=" + password,
 				
 				// if script call was not successful
 				error: function(XMLHttpRequest, textStatus, errorThrown) {
-					$('div#loginResult').append("responseText: " + XMLHttpRequest.responseText
-						+ ", textStatus: " + textStatus
-						+ ", errorThrown: " + errorThrown);
-					$('div#loginResult').addClass("error");
+					$('div#loginError').fadeIn();
 				}, //error
 				// if script call was successful
 				// data contains the JSON values returned by the perl script
 				success: function(data) {
 					if (data.error) { // script returned error
-						$('div#loginResult').append("data.error: " + data.error);
-						$('div#loginResult').addClass("error");
+						$('div#loginInvalid').fadeIn();
 					} //if
 					else { // login was successful
-						$('form#loginForm').hide();
-						$('div#loginResult').append("data.success: " + data.success
-							+ ", data.userid: " + data.userid);
-						$('div#loginResult').addClass("success");
+						$('div#login').toggle();
+						$('div#loginSuccess').fadeIn();
 					} //else
 				} //success
 			}); //ajax
 		} //if
 		else {
-			$('div#loginResult').append("Enter username and password");
-			$('div#loginResult').addClass("error");
+			$('div#loginIncomplete').fadeIn();
 		} //else
 		$('div#loginResult').fadeIn();
 		return false;

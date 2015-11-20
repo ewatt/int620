@@ -69,20 +69,25 @@ my (
 sub CheckLogin {
 
 	# get username and password parameters
-	my $username = $cgiObject->param("username");
-	my $password = $cgiObject->param("password");
+	my $username = $cgiObject->param("loginUsername");
+	my $password = $cgiObject->param("loginPassword");
 	
 	# untaint $username, only allow [azAZ09.-_], max 45 chars
-	$username = $1 if ($username =~ /^([\w\-\.]{5,45})$/a) or return undef;
+	if ($username =~ /^([\w\-\.])$/a) {
+		$username = $1
+	}
 	
 	# untaint $password, allow any non whitespace, max 45 chars
-	$password = $1 if ($password =~ /^([\S]{8,45})$/a) or return undef;
+	if ($password =~ /^([\S])$/a) {
+		$password = $1
+	}
 	
 	# salt is uuid combined with username to make it
 	# unique for users who have the same passwords.	
 	my $SaltHashPass = sha1_base64($password,HASHSALT.$username);
 	
 	if ($debug) {
+		warn "[!] sub CheckLogin";
 		warn "[+] \$username = $username";
 		warn "[+] \$password = $password";
 		warn "[+] \$SaltHashPass = $SaltHashPass";
@@ -112,22 +117,23 @@ sub CheckLogin {
 
 
 sub CheckSignup {
-	my $ReturnCode = undef;
-	my $username = $cgiObject->('username');
-	my $password1 = $cgiObject->('password1');
-	my $password2 = $cgiObject->('password2');
+	my $ReturnCode;
+	my $username = $cgiObject->param("signupUsername");
+	my $password = $cgiObject->param("signupPassword");
+	my $confirm  = $cgiObject->param("signupConfirm");
 	
 	# untaint $username, only allow [azAZ09.-_], max 45 chars
 	$username = $1 if ($username =~ /^([\w\-\.]{5,45})$/a) or $ReturnCode = 65;
 	
 	# untaint $password, allow all printable ASCII, max 45 chars
-	$password1 = $1 if ($password1 =~ /^([ -~]{8,45})$/a) or $ReturnCode = 64;
-	$password2 = $1 if ($password2 =~ /^([ -~]{8,45})$/a) or $ReturnCode = 63;
+	$password = $1 if ($password =~ /^([ -~]{8,45})$/a) or $ReturnCode = 64;
+	$confirm  = $1 if ($confirm  =~ /^([ -~]{8,45})$/a) or $ReturnCode = 63;
 	
 	if ($debug) {
+		warn "[!] sub CheckSignup";
 		warn "[+] \$username = $username";
-		warn "[+] \$password1 = $password1";
-		warn "[+] \$password2 = $password2";
+		warn "[+] \$password = $password";
+		warn "[+] \$confirm  = $confirm";
 		#warn "[+] \$SaltHashPass = $SaltHashPass";
 	}
 	
@@ -152,14 +158,14 @@ sub CheckSignup {
 	if (undef $userID) {
 
 		# password1 and password2 must be the same...
-		if ($password1 eq $password2) {
+		if ($password eq $confirm) {
 			
 			#TODO: still need length requirement.
 			# password must meet complexity requirements...
-			if ($password1 =~ /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W])$/) {
+			if ($password =~ /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W])$/) {
 				
 				# all requirement tests passed, new user can sign up.
-				my $password = $1;
+				$password = $1;
 			
 				# salt is uuid combined with username to make it
 				# unique for users who have the same passwords.	
@@ -217,24 +223,33 @@ if ($cgiObject->cookie()) {
 	}
 }
 
+if ($debug) {
+	warn "[+]\n ",Dumper($cgiObject);
+}
+
+
 # check for CGI parameters
 if ($cgiObject->param()) {
 	# check for username and password parameters
-	if ($cgiObject->param("username") and $cgiObject->param("password")) {
+	if ($cgiObject->param("loginUsername") and $cgiObject->param("loginPassword")) {
 		$loginUID = CheckLogin;
 		if ($loginUID) {
 			# c'mon in
 			$jsonData = qq{{"success" : "login is successful", "userid" : "$loginUID"}};
-			# the apache session id is used instead of this.
-			#$cookieUID =
-			#	$cgiObject->cookie(	-name	=> 'uid',
-			#						-value	=> $loginUID,
-			#						-expires=> '+1h',
-			#				);
 		}
 		else {
 			# access denied
 			$jsonData = qq{{"error" : "username or password is incorrect"}};
+		}
+	}
+	# check for username, password1 and password2
+	if ($cgiObject->param("signupUsername") and $cgiObject->param("signupPassword") and $cgiObject->param("signupConfirm")) {
+		$loginUID = CheckSignup;
+		if ($loginUID) {
+			# signup successful
+		}
+		else {
+			# signup unsuccessful
 		}
 	}
 }
@@ -292,13 +307,9 @@ else {
 			'self'	=> '/index.dhtml',
 			'css'	=> '/css/style.css',
 			'title'	=> 'title-of-page',
-			'header'=> 'Login',
 			'copy'	=> '2015',
 			'author'=> 'Ian Watt',
 		},
-		#'data'	=> {
-		#	'loginUID'	=> $loginUID,	# this won't exist on first visit.
-		#},
 	};
 	
 	print $cgiObject->header(-type	=> 'text/html',

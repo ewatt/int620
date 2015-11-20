@@ -1,11 +1,8 @@
-		</div>
-		<div class='col-sm-2 sidenav'>
-			<div class='well'>
-				<p>this-space-for-rent</p>
-			</div>
-			<div class='well'>
-				<p>this-space-for-rent</p>
-			</div>
-		</div>
+<div class='col-sm-2 sidenav'>
+	<div class='container-fluid well'>
+		<p>this-space-for-rent</p>
+	</div>
+	<div class='container-fluid well'>
+		<p>this-space-for-rent</p>
 	</div>
 </div>
