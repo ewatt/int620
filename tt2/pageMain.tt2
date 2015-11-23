@@ -18,6 +18,21 @@
 					<p>Sign Up was successful!</p>
 				</div>
 				
+				<!--
+				<div class='container well' id='status'>
+					<ul>
+						[% IF session.access == 1 %]
+						<li>user is logged in. [% session.access %]</li>
+						[% ELSE %]
+						<li>user is not logged in. [% session.access %]</li>
+						[% END %]
+						<li>your first visit was: [% session.first %]</li>
+						<li>your last visit was: [% session.last %]</li>
+						<li>you have been here [% session.count %] times</li>
+					</ul>					
+				</div>
+				-->
+				
 				
 				<ul class='nav navbar-nav'>
 					<li><a href='#page1'><span class='glyphicon glyphicon-backward'></span></a></li>
@@ -26,6 +41,7 @@
 					<li><a href='#page4'><span class='glyphicon glyphicon-stop'></span></a></li>
 					<li><a href='#page5'><span class='glyphicon glyphicon-forward'></span></a></li>
 				</ul>
+				
 		
 			</div>
 		</div>

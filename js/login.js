@@ -29,6 +29,8 @@ $(document).ready(function(){
 						$('div#loginInvalid').fadeIn();
 					} //if
 					else { // login was successful
+						$('nav#loggedOut').hide();
+						$('nav#loggedIn').show();
 						$('div#login').modal('hide');
 						$('div#loginSuccess').fadeIn();
 					} //else

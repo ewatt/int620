@@ -230,15 +230,19 @@ if ($cgiObject->cookie()) {
 
 # check for CGI parameters
 if ($cgiObject->param()) {
+	warn "[!] found cgi params!" if ($debug);
 	# check for username and password parameters
 	if ($cgiObject->param("loginUsername") and $cgiObject->param("loginPassword")) {
+		warn "[!] entering CheckLogin" if ($debug);
 		$loginUID = CheckLogin;
 		if ($loginUID) {
 			# c'mon in
+			$session{access} = 1;
 			$jsonData = qq{{"success" : "login is successful", "userid" : "$loginUID"}};
 		}
 		else {
 			# access denied
+			#$session{access} = 0;
 			$jsonData = qq{{"error" : "username or password is incorrect"}};
 		}
 	}
@@ -258,6 +262,20 @@ if ($cgiObject->param()) {
 			$jsonData = qq{{"error" : "username is not available"}};
 		}
 	}
+	if ($cgiObject->param("logout")) {
+		warn "[!] found cgi param logout" if ($debug);
+		if ($cgiObject->param("logout") == 1) {
+			warn "[!] user clicked logout button!" if ($debug);
+			$jsonData = qq{{"success" : "user logged out!"}};
+			$session{access} = 0;
+			warn Dumper %session if ($debug);
+		}
+		else {
+			warn "[!] user didn't click logout button!" if ($debug);
+			$jsonData = qq{{"error" : "something's fucky"}};
+		}
+	}
+	
 }
 
 
@@ -266,7 +284,12 @@ if ($jsonData) {
 	# return the json string
 	print $cgiObject->header(-type	=> 'application/json',
 							-charset=> 'utf-8',
-							#-cookie	=> $cookieUID,
+							-cookie	=> $cgiObject->cookie(-name => 'session',
+														  -value => $session{_session_id},
+														  -expires => ''),
+							-cookie => $cgiObject->cookie(-name => 'access',
+														  -value => $session{access},
+														  -expires => ''),
 					);
 	print $jsonData;
 }
@@ -286,6 +309,7 @@ else {
 	# first visit, last visit and count of visits
 	$session{first} = $session{last} = time;
 	$session{count} = 0;
+	$session{access} = 0;
 	
 	$sessionID = $session{ _session_id };
 	
@@ -316,6 +340,7 @@ else {
 			'copy'	=> '2015',
 			'author'=> 'Ian Watt',
 		},
+		'session' => \%session,
 	};
 	
 	print $cgiObject->header(-type	=> 'text/html',
