@@ -33,6 +33,10 @@
 				</div>
 				-->
 				
+				[% INCLUDE pageProfile.tt2 %]
+				
+				[% INCLUDE pageMessage.tt2 %]
+				
 				
 				<ul class='nav navbar-nav'>
 					<li><a href='#page1'><span class='glyphicon glyphicon-backward'></span></a></li>

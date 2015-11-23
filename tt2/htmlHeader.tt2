@@ -12,6 +12,10 @@
 	<script src='/js/login.js'></script>
 	<script src='/js/logout.js'></script>
 	<script src='/js/signup.js'></script>
+	<script src='/js/profile.js'></script>
+	<script src='/js/settings.js'></script>
+	<script src='/js/trades.js'></script>
+	<script src='/js/messages.js'></script>
 	<script>
 		// enable jquery tooltips
 		/*
