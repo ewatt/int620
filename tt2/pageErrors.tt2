@@ -1,0 +1,24 @@
+<div class='alert alert-danger fade in' id='loginIncomplete' style='display:none'>
+	<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+	<p>Log In form is incomplete!</p>
+</div>
+<div class='alert alert-danger fade in' id='loginInvalid' style='display:none'>
+	<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+	<p>Log In credentials are invalid!</p>
+</div>
+<div class='alert alert-success fade in' id='loginSuccess' style='display:none'>
+	<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+	<p>Log In was successful!</p>
+</div>
+<div class='alert alert-danger fade in' id='signupIncomplete' style='display:none'>
+	<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+	<p>Sign up form is incomplete!</p>
+</div>
+<div class='alert alert-danger fade in' id='signupInvalid' style='display:none'>
+	<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+	<p>Sign Up credentials are invalid!</p>
+</div>
+<div class='alert alert-success fade in' id='signupSuccess' style='display:none'>
+	<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+	<p>Sign Up was successful!</p>
+</div>
