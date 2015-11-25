@@ -18,8 +18,8 @@
 				-->
 			</ul>
 			<ul class='nav navbar-nav navbar-right'>
-				<li><a href='#signup' data-toggle='modal' data-target='#signup'><span class='glyphicon glyphicon-user'></span> Sign Up</a></li>
-				<li><a href='#login' data-toggle='modal' data-target='#login'><span class='glyphicon glyphicon-log-in'></span> Log In</a></li>
+				<li><a id='buttonSignup' href='#signup' data-toggle='modal' data-target='#signup'><span class='glyphicon glyphicon-user'></span> Sign Up</a></li>
+				<li><a id='buttonLogin' href='#login' data-toggle='modal' data-target='#login'><span class='glyphicon glyphicon-log-in'></span> Log In</a></li>
 			</ul>
 		</div>
 	</div>
@@ -40,13 +40,13 @@
 		<div class='collapse navbar-collapse' id='site-navbar'>
 			<ul class='nav navbar-nav'>
 
-				<li><a id='profile' href='#profile'><span class='glyphicon glyphicon-user'></span> Profile</a></li>
-				<li><a id='settings' href='#settings'><span class='glyphicon glyphicon-wrench'></span> Settings</a></li>
-				<li><a id='trades' href='#trades'><span class='glyphicon glyphicon-random'></span> Trades</a></li>
-				<li><a id='messages' href='#messages'><span class='glyphicon glyphicon-comment'></span> Messages</a></li>
+				<li><a id='buttonProfile' href='#profile'><span class='glyphicon glyphicon-user'></span> Profile</a></li>
+				<li><a id='buttonSettings' href='#settings'><span class='glyphicon glyphicon-wrench'></span> Settings</a></li>
+				<li><a id='buttonTrades' href='#trades'><span class='glyphicon glyphicon-random'></span> Trades</a></li>
+				<li><a id='buttonMessages' href='#messages'><span class='glyphicon glyphicon-comment'></span> Messages</a></li>
 			</ul>
 			<ul class='nav navbar-nav navbar-right'>
-				<li><a id="logout" href='#logout'><span class='glyphicon glyphicon-log-out'></span> Log Out</a></li>
+				<li><a id="buttonLogout" href='#logout'><span class='glyphicon glyphicon-log-out'></span> Log Out</a></li>
 			</ul>
 		</div>
 	</div>

@@ -1,5 +1,6 @@
 $(document).ready(function(){
-	$('a#settings').click(function(){
-		alert('you clicked settings');
+	$('a#buttonSettings').click(function(){
+		$('a#buttonSettings').parent().toggleClass('active');
+		$('div#pageSettings').toggle();
 	});
 });

@@ -7,6 +7,8 @@ $(document).ready(function(){
 		// get password
 		var password = $('#loginPassword').val();	//.attr('value');
 			
+		alert("\nusername="+username+"\npassword="+password+"\n");
+		
 		// if values are not empty
 		if (username && password) {
 			$.ajax({

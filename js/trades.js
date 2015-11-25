@@ -1,5 +1,6 @@
 $(document).ready(function(){
-	$('a#trades').click(function(){
-		alert('you clicked trades');
+	$('a#buttonTrades').click(function(){
+		$('a#buttonTrades').parent().toggleClass('active');
+		$('div#pageTrades').toggle();
 	});
 });

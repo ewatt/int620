@@ -35,7 +35,7 @@
 				
 				[% INCLUDE pageProfile.tt2 %]
 				
-				[% INCLUDE pageMessage.tt2 %]
+				[% INCLUDE pageMessages.tt2 %]
 				
 				
 				<ul class='nav navbar-nav'>

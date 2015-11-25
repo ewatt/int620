@@ -9,20 +9,6 @@
 	<link rel='stylesheet' href='[% page.css %]'>
 	<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js'></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-	<script src='/js/login.js'></script>
-	<script src='/js/logout.js'></script>
-	<script src='/js/signup.js'></script>
-	<script src='/js/profile.js'></script>
-	<script src='/js/settings.js'></script>
-	<script src='/js/trades.js'></script>
-	<script src='/js/messages.js'></script>
-	<script>
-		// enable jquery tooltips
-		/*
-		$(document).ready(function(){
-			$('[data-toggle="tooltip"]').tooltip();
-		});
-		*/
-	</script>
+	<script src='/js/ajax.js'></script>
 </head>
 <body>

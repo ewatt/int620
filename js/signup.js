@@ -9,7 +9,7 @@ $(document).ready(function(){
 		// get confirmed password
 		var confirm = $('#signupConfirm').val();
 		
-		alert("\nusername="+username+"\npassword="+password+"\nconfirm="+confirm+"\n");
+		//alert("\nusername="+username+"\npassword="+password+"\nconfirm="+confirm+"\n");
 		
 		// if values are not empty
 		if (username && password && confirm) {

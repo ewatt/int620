@@ -51,6 +51,7 @@ use constant HASHSALT		=> "58b4a401-3b7a-4c92-aaaf-8273c74752ed";
 
 my (
 	$cgiObject,
+	$dbObject,
 	%ttConfig,
 	$ttObject,
 	$ttParameters,
@@ -217,12 +218,32 @@ sub CheckSignup {
 
 # create new CGI object
 $cgiObject = new CGI;
+$dbObject = DatabaseConfiguration::ConnectDatabase;
 
 # can I have a cookie?
 if ($cgiObject->cookie()) {
+	warn "[!] we got cookies" if ($debug);
 	# can I have a session cookie?
 	if ($cgiObject->cookie('session')) {
-		$sessionID = $cgiObject->cookie('session');
+		warn "[!] we got session cookies" if ($debug);
+		
+		#$session{_session_id} = $cgiObject->cookie('session');
+		tie %session, 'Apache::Session::MySQL',$cgiObject->cookie('session'),
+			{ Handle => $dbObject, LockHandle => $dbObject, };
+		
+		warn "[!] \$session{last} is $session{last}" if ($debug);
+		
+		
+		if ($session{last} > (time - 600)) {
+			warn "[!] session is less than 10 minutes old." if ($debug);
+			$session{last} = time;
+			$session{access} = 1;
+			
+			
+		}
+		
+		
+		
 	}
 }
 
@@ -286,24 +307,18 @@ if ($jsonData) {
 							-charset=> 'utf-8',
 							-cookie	=> $cgiObject->cookie(-name => 'session',
 														  -value => $session{_session_id},
-														  -expires => ''),
-							-cookie => $cgiObject->cookie(-name => 'access',
-														  -value => $session{access},
-														  -expires => ''),
+														  -expires => '1d'),
+							#-cookie => $cgiObject->cookie(-name => 'access',
+							#							  -value => $session{access},
+							#							  -expires => ''),
 					);
 	print $jsonData;
 }
 # is this your first time here?
 else {
 	# create a new session
-	my $dbObject = DatabaseConfiguration::ConnectDatabase;
 	tie %session, 'Apache::Session::MySQL', $sessionID,
-		{	Handle => $dbObject,
-			LockHandle => $dbObject,
-			#DataSource	=> "DBI:mysql:db_access;localhost;3306",
-			#UserName	=> "db_user",
-			#Password	=> "db_pass",
-		};
+		{ Handle => $dbObject, LockHandle => $dbObject, };
 	
 	# store current epoch time in session as first visit.
 	# first visit, last visit and count of visits
@@ -311,13 +326,11 @@ else {
 	$session{count} = 0;
 	$session{access} = 0;
 	
-	$sessionID = $session{ _session_id };
-	
 	# create session cookie
 	$cookieSession =
 		$cgiObject->cookie(	-name => 'session',
-							-value=> $sessionID,
-							-expires=> '',
+							-value=> $session{ _session_id },
+							-expires=> '1h',
 					);
 	
 	# create template toolkit object configuration
@@ -336,6 +349,7 @@ else {
 		'page'	=> {
 			'self'	=> '/index.dhtml',
 			'css'	=> '/css/style.css',
+			'js'	=> '/js/ajax.css',
 			'title'	=> 'title-of-page',
 			'copy'	=> '2015',
 			'author'=> 'Ian Watt',
@@ -351,7 +365,7 @@ else {
 }
 	
 if ($debug) {
-	warn "\n[+] ",Dumper( $sessionID );
+	warn "\n[+] ",Dumper( %session );
 }
 
 __END__
