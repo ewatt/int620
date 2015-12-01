@@ -1,4 +1,9 @@
 #!/usr/bin/perl
+#
+# by Ian Watt
+# iwatt@myseneca.ca
+# 01-12-2015
+#
 
 my $debug = 1;
 
@@ -166,13 +171,16 @@ else {
 	}
 }
 
+# create session cookie
 $session_cookie = $cgiObject->cookie( -name		=> 'session',
 									  -value	=> $session{_session_id},
 									  -expires	=> '+1m',
 									);
 
+# create cgi header
 $cgiHeader = $cgiObject->header( -cookie => $session_cookie );
 
+# create template toolkit configuration
 %ttConfig = (
 	INCLUDE_PATH	=> [ TEMPLATELIB ],
 	ENCODING		=> 'utf8',
@@ -180,8 +188,10 @@ $cgiHeader = $cgiObject->header( -cookie => $session_cookie );
 	POST_CHOMP		=> 1,
 );
 
+# create template toolkit object
 $ttObject = Template->new( \%ttConfig );
 
+# create template toolkit page parameters
 $ttParameters = {
 	'page'	=> {
 		'self'	=>	[ SELFURL ],
@@ -191,17 +201,23 @@ $ttParameters = {
 	'session' => \%session,
 };
 	
+# output the cgi header
 print $cgiHeader;
 
+# process the template
 $ttObject->process( TEMPLATE, $ttParameters )
 	or die $ttObject->error();
 
+# disconnect the database object
 $dbObject->disconnect();
 
+# done
 return;
 
 
-
+# retrieves data from the database
+# requires a hash containing a sql query string and an array of values
+# returns a single database record
 sub GetData {
 	warn "[!] sub GetData" if $debug;
 
@@ -216,7 +232,9 @@ sub GetData {
 	return ( $sqlObject->fetchrow_array );
 }
 
-
+# inserts data into the database
+# requires a hash containing a sql query string and an array of values
+# returns the id of the inserted object
 sub PutData {
 	warn "[!] sub PutData" if $debug;
 
@@ -231,94 +249,92 @@ sub PutData {
 	return ( $sqlObject->{mysql_insertid} );
 }
 
-
+# validates the user provided username and password
+# requires a username string and a password string
+# returns userid if login is valid or returns undef
 sub ValidateLogin($$) {
-	warn "[!] sub ValidateLogin" if $debug;
-
-	my $username = shift;
-	my $password = shift;
-
-	my %sql;
-	my $sha512;
-	my $result;
+	my ($username, $password) = @_;
+	my (%sql, $sha512, $result);
 	
+	# untaint the username and password
 	$username = $1 if ( $username =~ /^([\w\-\.]{4,45})$/a );
 	$password = $1 if ( $password =~ /^([ -~]{4,45})$/a );
 	
+	# hash and salt the password and then destroy the password
+	# to prevent me from trying to reference it again.
 	$sha512 = sha512_base64( $password, RANDOMSALT.$username )
 		and undef $password;
 	
-	#warn "[+] \$sha512 is $sha512" if $debug;
-	#warn "[+] \$password is $password" if $debug;
-	
+	# create the sql query statement string
 	$sql{query} = qq~SELECT id FROM tbl_plebs WHERE pleb = ? AND code = ?~;
 	
+	# create the sql values array
 	@sql{values} = [ $username, $sha512 ];
 	
+	# call the database and retrieve the result if any
 	$result = GetData( \%sql );
 	
-	#warn "[+] \$result is $result" if $debug;
-	
+	# return the result
 	return $result;
 }
 
-
+# validates the user provided username, password and confirmed password
+# requires a username string, a password string, and a confirm password string
+# returns userid if signup is valid or returns undef
 sub ValidateSignup($$$) {
-	warn "[!] sub ValidateSignup" if $debug;
-
-	my $username = shift;
-	my $password = shift;
-	my $confirm = shift;
-
-	my %sql;
-	my $sha512;
-	my $result;
+	my ($username, $password, $confirm) = @_;
+	my (%sql, $sha512, $result);
 	
+	# untaint the username, password, and confirmed password
 	$username = $1 if ( $username =~ /^([\w\-\.]{4,45})$/a );
 	$password = $1 if ( $password =~ /^([ -~]{4,45})$/a );
 	$confirm = $1 if ( $confirm =~ /^([ -~]{4,45})$/a );
 	
-	#warn "[+] \$username is $username" if $debug;
-	#warn "[+] \$password is $password" if $debug;
-	#warn "[+] \$confirm is $confirm" if $debug;
-	
 	# if password and confirm match
 	if ( $password eq $confirm ) {
 		
+		# create the sql query statement string
 		$sql{query} = qq~SELECT id FROM tbl_plebs WHERE pleb = ?~;
 		
+		# create the sql values array
 		@sql{values} = [ $username ];
 		
-		# if username is not taken
+		# call the database and check if username is not taken
 		if ( not GetData( \%sql ) ) {
 			
-			# if password is complex
+			# check if password is complex
+			###TODO: this doesn't check anything but makes testing easier ###
 			if ( $password =~ /^(.*)$/ ) {
-				
+			
+				# hash and salt the password and then destroy the password and
+				# confirmed password to prevent me from trying to reference them again.
 				$sha512 = sha512_base64( $password, RANDOMSALT.$username )
 					and undef $password, $confirm;
 				
+				# create the sql query statement string
 				$sql{query} = qq~INSERT INTO tbl_plebs (pleb,code) VALUES (?,?)~;
 				
+				# create the sql values array
 				@sql{values} = [ $username, $sha512 ];
 				
+				# call the database to insert data and return result if any
 				$result = PutData( \%sql );
-				#warn "[!] \$result is $result" if $debug;
 			}
 			else {
-				# password is too simple
+				# the password is too simple
 				warn "[-] Password is still possible to remember" if $debug;
 			}
 		}
 		else {
-			# username is already in use
+			# the username is already in use
 			warn "[-] all the usernames are already taken" if $debug;
 		}
 	} else {
-		# passwords are different
+		# the passwords are different
 		warn "[-] your password sucks" if $debug;
 	}
 	
+	# return the result
 	return $result;
 }
 
