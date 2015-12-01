@@ -1,0 +1,447 @@
+#!/usr/bin/perl
+
+my $debug = 1;
+
+warn "\n\n+++++\n\n[!] begin script" if $debug;
+
+# http://perldoc.perl.org/perlsec.html#Cleaning-Up-Your-Path
+delete @ENV{ qw( IFS CDPATH ENV BASH_ENV ) };
+
+use strict;
+use warnings;
+use Template;
+use DBI;
+use CGI qw( standard );
+use CGI::Cookie;
+use Apache::Session::MySQL;
+use Digest::SHA1 qw( sha1_base64 );
+use URI::Escape qw( uri_escape uri_unescape );
+use MIME::Base64 qw( encode_base64 decode_base64 );
+
+if ($debug) {
+	use diagnostics;
+	use Data::Dumper;
+}
+
+use constant SELFURL		=> "/wip/session.html";
+use constant TEMPLATELIB	=> "/srv/Project/wip/tt2";
+use constant TEMPLATE		=> "pageMain.tt2";
+use constant RANDOMSALT		=> "58b4a401-3b7a-4c92-aaaf-8273c74752ed";
+
+my $DBHOST = 'localhost';
+my $DBPORT = '3306';
+my $DBDRIVER = 'mysql';
+my $DATABASE = 'db_project';
+my $USERNAME = 'username';
+my $PASSWORD = 'password';
+
+my (
+	$cgiObject,
+	$dbObject,
+	%cookies,
+	%session,
+	$session_id,
+);
+
+sub main {
+	
+	warn "[!] sub main" if $debug;
+	
+	$cgiObject = CGI->new;
+	
+	%cookies = CGI::Cookie->fetch;
+
+	$session_id = $cookies{'session'}->value;
+	
+	$session_id = $session_id ? $session_id : undef;
+	
+	$dbObject = connectDatabase($dbObject);	
+	connectSession( \%session, $session_id );
+	
+	# did the user submit a form?
+	if ($cgiObject->param()) {
+		
+		# is the user logging in?
+		if ( $cgiObject->param('username') and $cgiObject->param('password') ) {
+		
+			warn "\t[+] login attempt" if $debug;
+			
+			# are the users credentials valid?
+			if ( 0 < validLogin( scalar $cgiObject->param('username'), scalar $cgiObject->param('password') ) ) {
+		
+				warn "\t\t[+] Login is valid" if $debug;
+				
+				putSession();
+				showPage('access');		
+			}
+			else {
+				warn "\t\t[-] Login is invalid" if $debug;
+		
+				showPage('login');		
+			}
+		}
+		# is the user signing up?
+		elsif ( $cgiObject->param('signupUsername') and $cgiObject->param('signupPassword') and $cgiObject->param('signupConfirm') ) {
+		
+			warn "\t[+] signup attempt" if $debug;
+		
+			# is username available and are the users sign up credentials valid?
+			if ( validSignup( scalar $cgiObject->param('signupUsername'), scalar $cgiObject->param('signupPassword'), scalar $cgiObject->param('signupConfirm') ) ) {
+		
+				warn "\t\t[+] Signup was valid" if $debug;
+		
+				showPage('login');
+			}
+			else {		
+				warn "\t\t[-] signup was invalid" if $debug;
+		
+				showPage('signup');
+			}
+		}
+		# is the user signing out?
+		elsif ( $cgiObject->param('logout') ){
+			warn "[+] logout attempt" if $debug;
+			logout();
+			showPage('login');
+		}
+		# did the user do something unexpected?
+		else {
+			warn "\t[-] invalid cgi parameters found: ". Dumper $cgiObject->param if $debug;
+		}
+	}
+	else {
+		warn "[-] no cgi parameters found." if $debug;
+		
+		# do we have a session cookie?
+		if ($cgiObject->cookie('session')) {
+		
+			warn "\t[+] found a session cookie => ".$cgiObject->cookie('session') if $debug;
+			
+			# is the session cookie still valid?
+			if ( getSession() ) {	
+		
+				warn "\t\t[+] session is valid!" if $debug;
+				showPage('access');
+			}
+			else {
+				warn "\t\t[-] session is invalid" if $debug;
+				showPage('login');
+			}
+		}
+		else {
+			warn "\t[-] no session cookie found." if $debug;
+			showPage('login');
+		}	
+	}
+	return 0;
+} # sub main
+
+# shows output to the user in their browser.
+sub showPage {
+	warn "[!] sub showTemplate" if $debug;
+	my $pageTitle = my $pageView = shift;
+		
+	my (
+		%ttConfig,
+		$ttObject,
+		$ttParameters,
+		$cookieSession,
+		$cookieAccess,
+	);
+	
+	# setup template toolkit configuration.
+	%ttConfig = (
+		INCLUDE_PATH=> [ TEMPLATELIB ],
+		ENCODING	=> 'utf8',
+		PRE_CHOMP	=> 1,
+		POST_CHOMP	=> 1,
+	);
+	
+	# create new template toolkit object.
+	$ttObject = Template->new( \%ttConfig );
+	
+	# setup template toolkit page parameters.
+	$ttParameters = {
+		'page'	=> {
+			'self'	=>	[ SELFURL ],
+			'title'	=>	$pageTitle,
+			'view'	=>	$pageView,
+		},
+		'session' => \%session,
+	};
+	
+	# if we have a session store it in a cookie.
+	if ( $session{_session_id} ) {
+		$cookieSession = $cgiObject->cookie(-name	=> 'session',
+											-value	=> $session{_session_id},
+											-expires=> '+1d',
+											);
+	}
+	# if user has access store it in a cookie.
+	if ( $session{access} ) {
+		$cookieAccess = $cgiObject->cookie(-name	=> 'access',
+										   -value	=> $session{access},
+										   -expires	=> '+10m',
+										   );
+	}
+	
+	# print the http header.
+	print $cgiObject->header(
+		-type => 'text/html',
+		-cookie => [ $cookieSession, $cookieAccess,	],
+	);
+	
+	# call template toolkit.
+	$ttObject->process ( TEMPLATE, $ttParameters )
+		or die ( $ttObject->error() );
+	
+	return 0;
+}
+
+# creates a session connection.
+sub connectSession {
+	warn "[!] sub connectSession" if $debug;
+	
+	my $session = shift;
+	my $id = shift;
+
+	warn "[!] \$sessionID is $id" if $debug;
+	warn Dumper $id;
+	
+	tie %$session,
+		'Apache::Session::MySQL', $id,
+		{ Handle => $dbObject, LockHandle => $dbObject, };
+	
+	warn Dumper \%session if $debug;
+		
+	if ( not 0 == $session{last} ) {
+		if ( time - 600 > $session{last} ) {
+			tied(%$session)->delete;
+			tie %$session,
+				'Apache::Session::MySQL', undef,
+				{ Handle => $dbObject, LockHandle => $dbObject, };
+		}
+	}
+	
+	return 0;
+}
+
+# gets data from a users session.
+sub getSession {
+	warn "[!] sub getSession" if $debug;
+	
+	#return ( $cgiObject->cookie('session') eq $session{_session_id} );
+	#####
+	
+	my $result = 0;
+	
+	warn "\t[!] cookie('session') is ".$cgiObject->cookie('session') and
+	warn "\t[!] \$session{_session_id} is ".$session{_session_id} and
+	warn "\t[!] cookie('access') is ".$cgiObject->cookie('access') and
+	warn "\t[!] \$session{access} is ".$session{access} if $debug;
+	
+	if ( $cgiObject->cookie('session') and $session{_session_id} ) {
+		
+		if ( $cgiObject->cookie('session') eq $session{_session_id} ) {
+		
+			warn "\t\t[+] cookie('session') matches \$session{_session_id}" if $debug;
+			
+			if ($cgiObject->cookie('access') and $session{access} ) {
+		
+				if ($cgiObject->cookie('access') eq $session{access} ) {
+		
+					warn "\t\t\t[+] cookie('access') matches \$session{access}" if $debug;
+					$result = 1;
+				}
+				else {
+					warn "\t\t\t[-] cookie('access') does not match \$session{access}" if $debug;
+				}
+			}
+			else {
+				warn "\t\t[-] cookie('access') or \$session{access} are undefined" if $debug;
+			}
+		}
+		else {
+			warn "\t\t[-] cookie('session') does not match \$session{_session_id}" if $debug;
+		}
+	}
+	else {
+		warn "\t[-] cookie('session') or \$session{_session_id} are undefined" if $debug;
+	}
+	
+	warn "[!] \$result is $result" if $debug;
+	
+	return $result;
+	#return ( $cgiObject->cookie('session') eq $session{_session_id} );
+}
+
+# puts data into a users session.
+sub putSession {
+	warn "[!] sub putSession" if $debug;
+	
+	unless (exists $session{first}) {
+		$session{first} = $session{last} = time;
+	}
+	else {
+		$session{last} = time;
+	}
+	
+	$session{ip} = $cgiObject->remote_host();	#$cgiObject->remote_addr();
+	$session{agent} = $cgiObject->user_agent();
+	$session{access} = 1
+			#scalar $cgiObject->param('username')
+				or $cgiObject->cookie('access')
+				or undef;
+	
+	warn "[+] \$session is ", Data::Dumper->Dump( [ %session ], [ qw(*session) ] );
+	
+	return $session{access};
+}
+
+# creates a database connection.
+sub connectDatabase {
+	warn "[!] sub connectDatabase" if $debug;
+	
+	$dbObject = shift;
+	
+	my $dbInfo = "DBI:$DBDRIVER:$DATABASE;$DBHOST;$DBPORT";
+	my $dbObject = DBI->connect($dbInfo,$USERNAME,$PASSWORD)
+		or die $DBI::errstr;
+		
+	return ($dbObject);
+}
+
+# gets data from the database.
+sub getDatabase {
+	warn "[!] sub getDatabase" if $debug;
+	my $sql = shift;
+	
+	warn "[+] \$sql=>{query} => ". $sql->{query} and
+	warn "[+] \$sql->{param} => ". Data::Dumper->Dump( [$sql->{param}], [qw(*param)] ) if $debug;
+	
+	my $sqlObject = $dbObject->prepare( $sql->{query} )
+		or die $dbObject->errstr;
+		
+	$sqlObject->execute( @{ $sql->{param} } )
+		or die $sqlObject->errstr;
+	
+	return ( $sqlObject->fetchrow_array );
+}
+
+# puts data into the database.
+sub putDatabase {
+	warn "[!] sub putDatabase" if $debug;
+	my $sql = shift;
+	
+	warn "[+] \$\$sql{query} => ". $$sql{query} and
+	warn "[+] \@\$sql{param} => ". Dumper @$sql{param} if $debug;
+	
+	my $sqlObject = $dbObject->prepare( $sql->{query} )
+		or die $dbObject->errstr;
+		
+	$sqlObject->execute( @{ $sql->{param} } )
+		or die $sqlObject->errstr;
+		
+	return $!;	#$sqlObject->fetchrow_array;
+}
+
+
+
+# validates a user login request.
+sub validLogin {
+	warn "[!] sub validLogin" if $debug;
+	my $username = shift;	#$cgiObject->param('username');
+	my $password = shift;	#$cgiObject->param('password');
+	my %sql;
+	
+	###untaint $username and $password
+	$username = $1 if ( $username =~ /^([\w\-\.]{4,45})$/a );
+	$password = $1 if ( $password =~ /^([ -~]{4,45})$/a );
+	
+	# salt and hash the password
+	my $SaltedHashedPassword
+		= sha1_base64( $password, RANDOMSALT.$username );
+	undef $password;
+	
+	# create the sql query
+	$sql{query} = qq~SELECT id FROM tbl_plebs WHERE pleb = ? AND code = ?~;
+	
+	# specify sql query parameters
+	@sql{param} = [ $username, $SaltedHashedPassword ];
+	
+	# get data from database
+	my $result = getDatabase( \%sql ) or (-1);
+	
+	warn "[+] sql result is $result" if $debug;
+	
+	return $result;
+}
+
+# validates a user signup request.
+sub validSignup {
+	warn "[!] sub validSignup" if $debug;
+	my $username = shift;	#$cgiObject->param('signupUsername');
+	my $password = shift;	#$cgiObject->param('signupPassword');
+	my $confirm = shift;	#$cgiObject->param('signupConfirm');
+	my %sql;
+	my $result;
+	
+	###untaint $username, $password, and $confirm
+	$username = $1 if ( $username =~ /^([\w\-\.]{4,45})$/a );
+	$password = $1 if ( $password =~ /^([ -~]{4,45})$/a );
+	$confirm = $1 if ( $confirm =~ /^([ -~]{4,45})$/a );
+	
+	# create the sql query
+	$sql{query} = qq~SELECT id FROM tbl_plebs WHERE pleb=?~;
+	
+	# specify the sql query parameters
+	@sql{param} = [ $username ];
+	
+	# if user does not exist...
+	unless ( getDatabase( \%sql ) ) {
+		
+		# if password and confirmation are the same...
+		if ( $password eq $confirm ) {
+			
+			# if password meets complexity test
+			####TODO: this matches anything.
+			if ( $password =~ /^(.*)$/ ) {
+				
+				# salt and hash the password
+				my $SaltedHashedPassword = sha1_base64($password,RANDOMSALT.$username);
+				undef $password, $confirm;
+	
+				# create sql query and insert to database
+				$sql{query} = qq~INSERT INTO tbl_plebs (pleb,code) VALUES (?,?)~;
+				@sql{param} = [ $username, $SaltedHashedPassword ];
+				putDatabase( \%sql );
+				
+				$result = 1;
+			}
+			else {
+				warn "[-] password failed complexity test" if $debug;
+				$result = -2;
+			}
+		}
+		else {
+			warn "[-] password does not match" if $debug;
+			$result = -4;
+		}
+	}
+	else {
+		warn "[-] username is already taken" if $debug;
+		$result = -8;
+	}
+	
+	return $result;
+}
+
+sub logout {
+	warn "[!] sub logout" if $debug;
+	warn "[+] \$session{access} is ".$session{access} if $debug;
+	$session{access} = -1;
+	return 0;
+}
+main();
+
+__END__

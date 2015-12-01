@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>[% page.title %]</title>
+</head>
+<body>
+
+[% SWITCH page.view %]
+[% CASE [ 'login', 'signup' ] %]
+<div id='pageLogin'>
+	<form action='' method='POST' id='formLogin'>
+		<input type='text' name='username' id='username' autocomplete='off' placeholder='username' /><br />
+		<input type='password' name='password' id='password' placeholder='password' /><br />
+		<input type='hidden' name='login' value='login' />
+		<button type='submit' form='formLogin'>Log In</button><br />
+	</form>
+</div>
+
+<div id='pageSignup'>
+	<form action='' method='POST' id='formSignup'>
+		<input type='text' name='username' id='username' autocomplete='off' placeholder='username' /><br />
+		<input type='password' name='password' id='password' placeholder='password' /><br />
+		<input type='password' name='confirm' id='confirm' placeholder='confirm' /><br />
+		<input type='hidden' name='signup' value='signup' />
+		<button type='submit' form='formSignup'>Sign Up</button><br />
+	</form>
+</div>
+
+[% CASE 'access' %]
+<div id='pageAccess'>
+	<h1>Access Granted.</h1><br />
+	<ul>
+		<li>[% session._session_id %]</li>
+		<li>[% session.last %]</li>
+		<li>[% session.first %]</li>
+		<li>[% session.access %]</li>
+		<li>[% session.ip %]</li>
+		<li>[% session.agent %]</li>
+	</ul>
+	<form action='' method='POST' id='formLogout'>
+		<input type='hidden' name='logout' value='logout' />
+		<button type='submit' form='formLogout'>Log Out</button><br />
+	</form>
+</div>
+[% END %]
+
+</body>
+</html>

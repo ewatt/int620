@@ -1,0 +1,325 @@
+#!/usr/bin/perl
+
+my $debug = 1;
+
+warn "\n\n\n+++++\n" if $debug;
+
+# clean up the environment
+# http://perldoc.perl.org/perlsec.html#Cleaning-Up-Your-Path
+delete @ENV{ qw( IFS CDPATH ENV BASH_ENV ) };
+
+
+# ====== module declarations ====== #
+use strict;
+use warnings;
+use CGI;
+use DBI;
+use Template;
+use Apache::Session::MySQL;
+use Digest::SHA qw( sha512_base64 );
+
+if ($debug) {
+	use diagnostics;
+	use Data::Dumper;
+}
+
+
+# ====== constant declarations ====== #
+use constant TEMPLATELIB	=> "/srv/Project/wip/tt2";
+use constant TEMPLATE		=> "pageMain.tt2";
+use constant SELFURL		=> "/wip/session2.dhtml";
+use constant RANDOMSALT		=> "58b4a401-3b7a-4c92-aaaf-8273c74752ed";
+
+# ====== global variable declarations ====== #
+my (
+	$dbObject,
+	$cgiObject,
+	%session,
+	$session_cookie,
+	%input,
+	%ttConfig,
+	$ttObject,
+	$ttParameters,
+	$cgiHeader,
+	$pageView,
+);
+
+
+# ====== begin script execution ====== #
+
+BEGIN {  }
+
+# create database connection object
+$dbObject = DBI->connect("DBI:mysql:db_project;localhost;3306",'username','password')
+	or die $DBI::errstr;
+
+# create cgi object
+$cgiObject = CGI->new();
+
+# get session cookie if there is one.
+$session_cookie = $cgiObject->cookie('session');
+
+# tie the session to session hash from cookie
+eval {
+	tie %session, 'Apache::Session::MySQL', $session_cookie,
+		{ Handle => $dbObject , LockHandle => $dbObject };
+};
+# if the session does not exist then create a new session.
+# http://www.perlmonks.org/bare/index.pl?node_id=148811
+if ($@ =~ m#^Object does not exist in the data store#) {
+	tie %session, 'Apache::Session::MySQL', undef,
+		{ Handle => $dbObject , LockHandle => $dbObject };
+}
+
+# get cgi form data input if there is any.
+%input = $cgiObject->Vars();
+
+warn Data::Dumper->Dump( [ \%session, \%input ], [ qw(*session *input) ] ) if $debug;
+
+
+# was the login button clicked?
+if ( $input{login} ) {
+	# was a username and a password provided?
+	if ( $input{username} and $input{password} ) {
+		# is the username and password valid?
+		if ( ValidateLogin( $input{username}, $input{password} ) ) {
+			
+			warn "[+] Login is valid" if $debug;
+			
+			# if this is the first visit,
+			# store first visit and last visit
+			unless ( exists $session{first} ) {
+				$session{first} = $session{last} = time;
+			}
+			# otherwise store only last visit
+			else {
+				$session{last} = time;
+			}
+			# record the users ip and user agent
+			$session{ip} = $cgiObject->remote_host();
+			$session{agent} = $cgiObject->user_agent();
+			
+			# set access enabled flags
+			$session{username} = $input{username};
+			$session{access} = $input{username};
+			
+			# set page to show user
+			$pageView = 'access';
+			
+		}
+		# login is invalid
+		else {
+			warn "[-] Login is invalid" if $debug;
+			$pageView = 'login';
+		}
+	}
+}
+# was the signup button clicked?
+elsif ( $input{signup} ) {
+	# was a username, a password, and a confirm provided?
+	if ( $input{username} and $input{password} and $input{confirm} ) {
+		# is the signup valid?
+		if ( ValidateSignup( $input{username}, $input{password}, $input{confirm} ) ) {
+			
+			warn "[+] Signup is valid" if $debug;
+			$pageView = 'login';
+			
+		}
+		# signup is invalid
+		else {
+			warn "[-] Signup is invalid" if $debug;
+			$pageView = 'signup';
+		}
+	}
+}
+# was the logout button clicked?
+elsif ( $input{logout} ) {
+	warn "[!] logout event" if $debug;
+	delete $session{access};
+	tied(%session)->delete();
+	untie(%session);
+	$session_cookie = $cgiObject->cookie( -name		=> 'session',
+										  -value	=> '',
+										  -expires	=> '-1y',
+										);
+	tie %session, 'Apache::Session::MySQL', undef,
+		{ Handle => $dbObject , LockHandle => $dbObject };
+	$pageView = 'login';
+}
+# no input
+else {
+	warn "[!] no input";
+	if ( defined $session_cookie and defined $session{access} and defined $session{last}
+			and ( $session_cookie eq $session{_session_id} )
+			and ( $session{last} > ( time - 600 ) ) ) {
+		
+		warn "[@] session has not timed out." if $debug;
+		$session{last} = time;
+		$session{ip} = $cgiObject->remote_host();
+		$session{agent} = $cgiObject->user_agent();
+		$session{access} = $session{username};
+		$pageView = 'access';
+	}
+	else {
+		warn "[@] session has timed out." if $debug;
+		$pageView = 'login';
+	}
+}
+
+$session_cookie = $cgiObject->cookie( -name		=> 'session',
+									  -value	=> $session{_session_id},
+									  -expires	=> '+1m',
+									);
+
+$cgiHeader = $cgiObject->header( -cookie => $session_cookie );
+
+%ttConfig = (
+	INCLUDE_PATH	=> [ TEMPLATELIB ],
+	ENCODING		=> 'utf8',
+	PRE_CHOMP		=> 1,
+	POST_CHOMP		=> 1,
+);
+
+$ttObject = Template->new( \%ttConfig );
+
+$ttParameters = {
+	'page'	=> {
+		'self'	=>	[ SELFURL ],
+		'title'	=>	"INT620",
+		'view'	=>	$pageView,
+	},
+	'session' => \%session,
+};
+	
+print $cgiHeader;
+
+$ttObject->process( TEMPLATE, $ttParameters )
+	or die $ttObject->error();
+
+$dbObject->disconnect();
+
+return;
+
+
+
+sub GetData {
+	warn "[!] sub GetData" if $debug;
+
+	my $sql = shift;
+	
+	my $sqlObject = $dbObject->prepare( $sql->{query} )
+		or die $dbObject->errstr;
+	
+	$sqlObject->execute( @{ $sql->{values} } )
+		or die $sqlObject->errstr;
+		
+	return ( $sqlObject->fetchrow_array );
+}
+
+
+sub PutData {
+	warn "[!] sub PutData" if $debug;
+
+	my $sql = shift;
+	
+	my $sqlObject = $dbObject->prepare( $sql->{query} )
+		or die $dbObject->errstr;
+	
+	$sqlObject->execute( @{ $sql->{values} } )
+		or die $sqlObject->errstr;
+		
+	return ( $sqlObject->{mysql_insertid} );
+}
+
+
+sub ValidateLogin($$) {
+	warn "[!] sub ValidateLogin" if $debug;
+
+	my $username = shift;
+	my $password = shift;
+
+	my %sql;
+	my $sha512;
+	my $result;
+	
+	$username = $1 if ( $username =~ /^([\w\-\.]{4,45})$/a );
+	$password = $1 if ( $password =~ /^([ -~]{4,45})$/a );
+	
+	$sha512 = sha512_base64( $password, RANDOMSALT.$username )
+		and undef $password;
+	
+	#warn "[+] \$sha512 is $sha512" if $debug;
+	#warn "[+] \$password is $password" if $debug;
+	
+	$sql{query} = qq~SELECT id FROM tbl_plebs WHERE pleb = ? AND code = ?~;
+	
+	@sql{values} = [ $username, $sha512 ];
+	
+	$result = GetData( \%sql );
+	
+	#warn "[+] \$result is $result" if $debug;
+	
+	return $result;
+}
+
+
+sub ValidateSignup($$$) {
+	warn "[!] sub ValidateSignup" if $debug;
+
+	my $username = shift;
+	my $password = shift;
+	my $confirm = shift;
+
+	my %sql;
+	my $sha512;
+	my $result;
+	
+	$username = $1 if ( $username =~ /^([\w\-\.]{4,45})$/a );
+	$password = $1 if ( $password =~ /^([ -~]{4,45})$/a );
+	$confirm = $1 if ( $confirm =~ /^([ -~]{4,45})$/a );
+	
+	#warn "[+] \$username is $username" if $debug;
+	#warn "[+] \$password is $password" if $debug;
+	#warn "[+] \$confirm is $confirm" if $debug;
+	
+	# if password and confirm match
+	if ( $password eq $confirm ) {
+		
+		$sql{query} = qq~SELECT id FROM tbl_plebs WHERE pleb = ?~;
+		
+		@sql{values} = [ $username ];
+		
+		# if username is not taken
+		if ( not GetData( \%sql ) ) {
+			
+			# if password is complex
+			if ( $password =~ /^(.*)$/ ) {
+				
+				$sha512 = sha512_base64( $password, RANDOMSALT.$username )
+					and undef $password, $confirm;
+				
+				$sql{query} = qq~INSERT INTO tbl_plebs (pleb,code) VALUES (?,?)~;
+				
+				@sql{values} = [ $username, $sha512 ];
+				
+				$result = PutData( \%sql );
+				#warn "[!] \$result is $result" if $debug;
+			}
+			else {
+				# password is too simple
+				warn "[-] Password is still possible to remember" if $debug;
+			}
+		}
+		else {
+			# username is already in use
+			warn "[-] all the usernames are already taken" if $debug;
+		}
+	} else {
+		# passwords are different
+		warn "[-] your password sucks" if $debug;
+	}
+	
+	return $result;
+}
+
+__END__
