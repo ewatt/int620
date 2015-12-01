@@ -1,0 +1,40 @@
+/* style.css */
+
+/* remove navbar default margin and rounded borders */
+.navbar {
+	margin-bottom: 0;
+	border-radius: 0;
+}
+/* set height of grid so .sidenav can be 100% */
+.row.content {
+	padding-top: 51px;
+	height: 1000px;
+}
+/* set gray background color and 100% height */
+.sidenav {
+	padding-top: 20;
+	background-color: #f1f1f1;
+	height: 100%;
+}
+/* set black background colour, white text, and some padding */
+footer {
+	background-color: #555;
+	color: white;
+	padding: 15px;
+}
+/* on small screens, set height to 'auto' for sidenav and grid */
+@media screen and (max-width: 767px) {
+	.sidenav {
+		height: auto;
+		padding: 15px;
+	}
+	.row.content {
+		height:auto;
+	}
+}
+
+/* prevents background from 'shifting' when modal opens and hides scrollbar */
+.modal-open {
+	overflow: scroll;
+	overflow-x: hidden;
+}
