@@ -1,61 +1,47 @@
-[% INCLUDE htmlHeader.tt2 %]
-	
-[% INCLUDE pageHeader.tt2 %]
+<html>
+<head>
+<title>[% page.title %]</title>
+</head>
+<body>
 
-<div class='container-fluid text-center'>
-	<div class='row content'>
-		[%# INCLUDE pageLeft.tt2 %]
-		<div class='col-sm-8 text-left'>
-			<div class='container center-block' style='height:400px'>
-				
-				<!--[%# error message divs %]-->
-				<div class='alert alert-success fade in' id='loginSuccess' style='display:none'>
-					<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
-					<p>Log In was successful!</p>
-				</div>
-				<div class='alert alert-success fade in' id='signupSuccess' style='display:none'>
-					<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
-					<p>Sign Up was successful!</p>
-				</div>
-				
-				<!--
-				<div class='container well' id='status'>
-					<ul>
-						[% IF session.access == 1 %]
-						<li>user is logged in. [% session.access %]</li>
-						[% ELSE %]
-						<li>user is not logged in. [% session.access %]</li>
-						[% END %]
-						<li>your first visit was: [% session.first %]</li>
-						<li>your last visit was: [% session.last %]</li>
-						<li>you have been here [% session.count %] times</li>
-					</ul>					
-				</div>
-				-->
-				
-				[% INCLUDE pageProfile.tt2 %]
-				
-				[% INCLUDE pageMessages.tt2 %]
-				
-				
-				<ul class='nav navbar-nav'>
-					<li><a href='#page1'><span class='glyphicon glyphicon-backward'></span></a></li>
-					<li><a href='#page2'><span class='glyphicon glyphicon-play'></span></a></li>
-					<li><a href='#page3'><span class='glyphicon glyphicon-pause'></span></a></li>
-					<li><a href='#page4'><span class='glyphicon glyphicon-stop'></span></a></li>
-					<li><a href='#page5'><span class='glyphicon glyphicon-forward'></span></a></li>
-				</ul>
-				
-		
-			</div>
-		</div>
-		[%# INCLUDE pageRight.tt2 %]
-	</div>
+[% SWITCH page.view %]
+[% CASE [ 'login', 'signup' ] %]
+<div id='pageLogin'>
+	<form action='' method='POST' id='formLogin'>
+		<input type='text' name='username' id='username' autocomplete='off' placeholder='username' /><br />
+		<input type='password' name='password' id='password' placeholder='password' /><br />
+		<input type='hidden' name='login' value='login' />
+		<button type='submit' form='formLogin'>Log In</button><br />
+	</form>
 </div>
 
-[% INCLUDE pageFooter.tt2 %]
+<div id='pageSignup'>
+	<form action='' method='POST' id='formSignup'>
+		<input type='text' name='username' id='username' autocomplete='off' placeholder='username' /><br />
+		<input type='password' name='password' id='password' placeholder='password' /><br />
+		<input type='password' name='confirm' id='confirm' placeholder='confirm' /><br />
+		<input type='hidden' name='signup' value='signup' />
+		<button type='submit' form='formSignup'>Sign Up</button><br />
+	</form>
+</div>
 
-[% INCLUDE htmlFooter.tt2 %]
+[% CASE 'access' %]
+<div id='pageAccess'>
+	<h1>Access Granted.</h1><br />
+	<ul>
+		<li>[% session._session_id %]</li>
+		<li>[% session.last %]</li>
+		<li>[% session.first %]</li>
+		<li>[% session.access %]</li>
+		<li>[% session.ip %]</li>
+		<li>[% session.agent %]</li>
+	</ul>
+	<form action='' method='POST' id='formLogout'>
+		<input type='hidden' name='logout' value='logout' />
+		<button type='submit' form='formLogout'>Log Out</button><br />
+	</form>
+</div>
+[% END %]
 
-[% INCLUDE formLogin.tt2 %]
-[% INCLUDE formSignup.tt2 %]
+</body>
+</html>

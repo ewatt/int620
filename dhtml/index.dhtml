@@ -239,13 +239,15 @@ if ($cgiObject->cookie()) {
 			$session{last} = time;
 			$session{access} = 1;
 			
-			
 		}
-		
-		
-		
 	}
 }
+
+#if ($session{access} == 1) {
+	#$jsonData = qq{{"success" : "login is successful"}};
+	
+#}
+
 
 #warn "[+]\n ",Dumper($cgiObject) if ($debug);
 
@@ -307,7 +309,7 @@ if ($jsonData) {
 							-charset=> 'utf-8',
 							-cookie	=> $cgiObject->cookie(-name => 'session',
 														  -value => $session{_session_id},
-														  -expires => '1d'),
+														  -expires => '+1d'),
 							#-cookie => $cgiObject->cookie(-name => 'access',
 							#							  -value => $session{access},
 							#							  -expires => ''),
@@ -330,7 +332,7 @@ else {
 	$cookieSession =
 		$cgiObject->cookie(	-name => 'session',
 							-value=> $session{ _session_id },
-							-expires=> '1h',
+							-expires=> '+1h',
 					);
 	
 	# create template toolkit object configuration

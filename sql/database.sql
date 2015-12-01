@@ -1,4 +1,4 @@
-CREATE DATABASE db_access;
-GRANT ALL ON `db_access`.* TO `db_user`@`localhost` IDENTIFIED BY 'db_pass';
+CREATE DATABASE db_project;
+GRANT ALL ON `db_project`.* TO `username`@`localhost` IDENTIFIED BY 'password';
 FLUSH PRIVILEGES;
 COMMIT;
