@@ -30,10 +30,13 @@ if ($debug) {
 
 
 # ====== constant declarations ====== #
-use constant TEMPLATELIB	=> "/srv/Project/wip/tt2";
+use constant TEMPLATELIB	=> "/srv/Project/tt2";
 use constant TEMPLATE		=> "pageMain.tt2";
-use constant SELFURL		=> "/wip/session2.dhtml";
+use constant SELFURL		=> "/index.dhtml";
+use constant PAGETITLE		=> "INT620 Project";
+use constant PAGECSS		=> "/css/style.css";
 use constant RANDOMSALT		=> "58b4a401-3b7a-4c92-aaaf-8273c74752ed";
+use constant TIMEOUT		=> 600;
 
 # ====== global variable declarations ====== #
 my (
@@ -42,9 +45,10 @@ my (
 	%session,
 	$session_cookie,
 	%input,
+	$json,
 	%ttConfig,
 	$ttObject,
-	$ttParameters,
+	$ttVariables,
 	$cgiHeader,
 	$pageView,
 );
@@ -91,15 +95,16 @@ if ( $input{login} ) {
 			
 			warn "[+] Login is valid" if $debug;
 			
-			# if this is the first visit,
-			# store first visit and last visit
-			unless ( exists $session{first} ) {
-				$session{first} = $session{last} = time;
-			}
-			# otherwise store only last visit
-			else {
-				$session{last} = time;
-			}
+			# store first visit if this is the first visit
+			$session{first} = time unless defined $session{first};
+			
+			# store last visit
+			$session{last} = time;
+			
+			# increment visit count
+			$session{count} = 0 unless defined $session{count};
+			$session{count} += 1;
+			
 			# record the users ip and user agent
 			$session{ip} = $cgiObject->remote_host();
 			$session{agent} = $cgiObject->user_agent();
@@ -108,6 +113,8 @@ if ( $input{login} ) {
 			$session{username} = $input{username};
 			$session{access} = $input{username};
 			
+			$json = qq{{"success" : "login is successful", "userid" : "$input{username}"}};
+			
 			# set page to show user
 			$pageView = 'access';
 			
@@ -115,6 +122,7 @@ if ( $input{login} ) {
 		# login is invalid
 		else {
 			warn "[-] Login is invalid" if $debug;
+			$json = qq{{"error" : "Username or password is incorrect."}};
 			$pageView = 'login';
 		}
 	}
@@ -127,12 +135,14 @@ elsif ( $input{signup} ) {
 		if ( ValidateSignup( $input{username}, $input{password}, $input{confirm} ) ) {
 			
 			warn "[+] Signup is valid" if $debug;
+			$json = qq{{"success" : "Signup was successful"}};
 			$pageView = 'login';
 			
 		}
 		# signup is invalid
 		else {
 			warn "[-] Signup is invalid" if $debug;
+			$json = qq{{"error" : "Username is not available."}};
 			$pageView = 'signup';
 		}
 	}
@@ -140,6 +150,7 @@ elsif ( $input{signup} ) {
 # was the logout button clicked?
 elsif ( $input{logout} ) {
 	warn "[!] logout event" if $debug;
+	$json = qq{{"success" : "User is logged out!"}};
 	delete $session{access};
 	tied(%session)->delete();
 	untie(%session);
@@ -154,11 +165,13 @@ elsif ( $input{logout} ) {
 # no input
 else {
 	warn "[!] no input";
-	if ( defined $session_cookie and defined $session{access} and defined $session{last}
+	if ( $session_cookie and $session{access} and $session{last}
 			and ( $session_cookie eq $session{_session_id} )
-			and ( $session{last} > ( time - 600 ) ) ) {
+			and ( $session{last} > ( time - TIMEOUT ) ) ) {
 		
 		warn "[@] session has not timed out." if $debug;
+		$session{count} = 0 unless defined $session{count}; 
+		$session{count} += 1;
 		$session{last} = time;
 		$session{ip} = $cgiObject->remote_host();
 		$session{agent} = $cgiObject->user_agent();
@@ -174,39 +187,60 @@ else {
 # create session cookie
 $session_cookie = $cgiObject->cookie( -name		=> 'session',
 									  -value	=> $session{_session_id},
-									  -expires	=> '+1m',
+									  -expires	=> '+1h',
 									);
 
 # create cgi header
-$cgiHeader = $cgiObject->header( -cookie => $session_cookie );
+if ($json) {
+	$cgiHeader = $cgiObject->header( -type		=> 'application/json',
+									 -charset	=> 'utf-8',
+									 -cookie	=> $session_cookie );
+	print $cgiHeader;
+	print $json;
+	#warn "[!] \$cgiHeader is \n$cgiHeader",
+	#warn "[!] \$cgiHeader is \n", Data::Dumper->Dump([$cgiHeader],["*cgiHeader"]),
+	#warn "[!] \$json is \n$json" if $debug;
+}
+else {
+	$cgiHeader = $cgiObject->header( -type		=> 'text/html',
+									 -charset	=> 'utf-8',
+									 -cookie	=> $session_cookie );
 
-# create template toolkit configuration
-%ttConfig = (
-	INCLUDE_PATH	=> [ TEMPLATELIB ],
-	ENCODING		=> 'utf8',
-	PRE_CHOMP		=> 1,
-	POST_CHOMP		=> 1,
-);
-
-# create template toolkit object
-$ttObject = Template->new( \%ttConfig );
-
-# create template toolkit page parameters
-$ttParameters = {
-	'page'	=> {
-		'self'	=>	[ SELFURL ],
-		'title'	=>	"INT620",
-		'view'	=>	$pageView,
-	},
-	'session' => \%session,
-};
+	# create template toolkit configuration
+	%ttConfig = (
+		INCLUDE_PATH	=> [ TEMPLATELIB ],
+		ENCODING		=> 'utf8',
+		PRE_CHOMP		=> 1,
+		POST_CHOMP		=> 1,
+		CACHE_SIZE		=> 0,
+	);
 	
-# output the cgi header
-print $cgiHeader;
+	# create template toolkit object
+	$ttObject = Template->new( \%ttConfig );
+	
+	# create template toolkit page variables
+	$ttVariables = {
+		'page'	=> {
+			'self'	=>	SELFURL,
+			'title'	=>	PAGETITLE,
+			'css'	=>	PAGECSS,
+			'copy'	=>	'2015',
+			'author'=>	'Ian Watt',
+			'view'	=>	$pageView,
+		},
+		'session' => \%session,
+	};
+	
+	#warn "[!] \$cgiHeader is \n", Data::Dumper->Dump([$cgiHeader],["*cgiHeader"]) if $debug;
+	
+	# output the cgi header
+	print $cgiHeader;
+	
+	# process the template
+	$ttObject->process( TEMPLATE, $ttVariables )
+		or die $ttObject->error();
 
-# process the template
-$ttObject->process( TEMPLATE, $ttParameters )
-	or die $ttObject->error();
+}
 
 # disconnect the database object
 $dbObject->disconnect();
@@ -214,21 +248,27 @@ $dbObject->disconnect();
 # done
 return;
 
+# ====== end of script execution ====== #
+
+
+
+# ====== sub routine declarations ====== #
 
 # retrieves data from the database
 # requires a hash containing a sql query string and an array of values
 # returns a single database record
 sub GetData {
-	warn "[!] sub GetData" if $debug;
-
 	my $sql = shift;
 	
+	# create the sql statement object
 	my $sqlObject = $dbObject->prepare( $sql->{query} )
 		or die $dbObject->errstr;
 	
+	# execute the sql statement
 	$sqlObject->execute( @{ $sql->{values} } )
 		or die $sqlObject->errstr;
-		
+	
+	# return the retrieved data if any
 	return ( $sqlObject->fetchrow_array );
 }
 
@@ -236,16 +276,17 @@ sub GetData {
 # requires a hash containing a sql query string and an array of values
 # returns the id of the inserted object
 sub PutData {
-	warn "[!] sub PutData" if $debug;
-
 	my $sql = shift;
 	
+	# create the sql statement object
 	my $sqlObject = $dbObject->prepare( $sql->{query} )
 		or die $dbObject->errstr;
 	
+	# execute the sql statement
 	$sqlObject->execute( @{ $sql->{values} } )
 		or die $sqlObject->errstr;
 		
+	# return the last inserted record id if any
 	return ( $sqlObject->{mysql_insertid} );
 }
 
