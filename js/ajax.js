@@ -168,5 +168,39 @@ $(document).ready(function(){
 	
 	$('a#buttonMessages').click(function(){ $('div#pageMessages').show(); });
 
+	$('form#formSearch').submit(function() {
+		var searchquery = $('#searchquery').val();
+		var searchboolean = $('#searchboolean').val();
+		var searchcategory = $('#searchcategory').val();
+		var searchperpage = $('#searchperpage').val();
+		
+		alert("Query is " + searchquery + "\nBoolean is " + searchboolean + "\nCategory is " + searchcategory + "\nPerPage is " + searchperpage + "\n");
+		
+		if (searchquery && searchboolean && searchcategory && searchperpage) {
+			$.ajax({
+				type: "POST",
+				url: "/index.dhtml",
+				content: "application/x-www-form-urlencoded; charset=utf-8",
+				dataType: "json",
+				data: {"searchquery":searchquery, "searchboolean":searchboolean, "searchcategory":searchcategory, "searchperpage":searchperpage },
+				error: function(XMLHttpRequest, textStatus, errorThrown) {
+					alert('error-bad-search-data');
+					$('div#searchInvalid').fadeIn();
+				},
+				success: function(data){
+					if (data.error) { // script returned error
+						alert('error-bad-search-results');
+						$('div#searchInvalid').fadeIn();
+					} //if
+					else { // search was successful
+						alert('success-search');
+						$('div#searchSuccess').fadeIn();
+						$('div.sitepage').hide();
+						$('div#searchResults').show();
+					} //else
+				},
+			});
+		}
+	});
 	
 });

@@ -162,7 +162,29 @@ elsif ( $input{logout} ) {
 		{ Handle => $dbObject , LockHandle => $dbObject };
 	$pageView = 'login';
 }
-# no input
+# was the search button clicked?
+elsif ( $input{searchquery} ) {
+	warn "[!] search event" if $debug;
+	
+	if ( $input{searchquery} and $input{searchboolean} and $input{searchcategory} and $input{searchperpage} ) {
+		my $dbMusicbrainz = DBI->connect("DBI:postgresql:musicbrainz;192.168.50.111;5432",'musicbrainz','musicbrainz')
+			or die $DBI::errstr;
+		
+		my $sqlQuery = qq~SELECT * FROM artist WHERE name = ?~;
+			
+		my $sqlMusicbrainz = $dbMusicbrainz->prepare( 'Beatles, The' )
+			or die $dbMusicbrainz->errstr;
+	
+		$sqlMusicbrainz->execute(  )
+			or die $sqlMusicbrainz->errstr;
+		
+		my $result = $sqlMusicbrainz->fetchrow_array;
+		
+	}
+	
+	
+}
+# no expected input
 else {
 	warn "[!] no input";
 	if ( $session_cookie and $session{access} and $session{last}
