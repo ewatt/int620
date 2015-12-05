@@ -5,10 +5,12 @@
     <meta charset='utf-8'>
 	<meta name='viewport' content='width=device-width,initial-scale=1'>
 	<title>[% page.title %]</title>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+	<link rel='stylesheet' href='/css/bootstrap.min.css'>
+	<link rel='stylesheet' href='/css/bootstrap-switch.min.css'>
 	<link rel='stylesheet' href='[% page.css %]'>
-	<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js'></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+	<script src='/js/jquery-1.11.3.min.js'></script>
+	<script src='/js/bootstrap.min.js'></script>
+	<script src='/js/bootstrap-switch.min.js'></script>
 	<script src='/js/ajax.js'></script>
 </head>
 <body>

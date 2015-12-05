@@ -1,5 +1,9 @@
 $(document).ready(function(){
 	
+	$('div#pageLogin').show();
+	$('div#pageSignup').show();
+	$('input#login-username').focus();
+	
 	// hide alerts when clicking any div
 	$('div').click(function(){
 		$('div.alert').hide();
@@ -44,7 +48,7 @@ $(document).ready(function(){
 						$('nav#loggedOut').hide();
 						$('nav#loggedIn').show();
 						$('div#loginSuccess').fadeIn();
-						$('div#pageLogin').hide();
+						$('div.sitepage').hide();
 						$('div#pageProfile').show();
 					} //else
 				} //success
@@ -71,7 +75,7 @@ $(document).ready(function(){
 			},
 			error: function(){
 				alert('error ajax logout function');
-				$('div#pageProfile').hide();
+				$('div.sitepage').hide();
 			}
 		});
 	});
@@ -114,7 +118,7 @@ $(document).ready(function(){
 					} //if
 					else { // signup was successful
 						$('div#signupSuccess').fadeIn();
-						$('div#pageSignup').hide();
+						$('div.sitepage').hide();
 						$('div#pageLogin').show();
 					} //else
 				} //success
@@ -129,20 +133,22 @@ $(document).ready(function(){
 
 	$('a#buttonSignup').click(function(){
 		$(this).blur();
-		//$('div#pageLogin').hide();
-		//$('div#pageSignup').fadeIn();
-		$('div#pageLogin').slideUp();
-		$('div#pageSignup').slideDown();
+		$('div#pageLogin').hide();
+		$('div#pageSignup').fadeIn();
+		//$('div#pageLogin').slideUp();
+		//$('div#pageSignup').slideDown();
+		$('input#signup-username').focus();
 	});
 	
 	$('a#buttonLogin').click(function(){
 		$(this).blur();
-		//$('div#pageSignup').hide();
-		//$('div#pageLogin').fadeIn();
-		$('div#pageSignup').slideUp();
-		$('div#pageLogin').slideDown();
+		$('div#pageSignup').hide();
+		$('div#pageLogin').fadeIn();
+		//$('div#pageSignup').slideUp();
+		//$('div#pageLogin').slideDown();
+		$('input#login-username').focus();
 	});
-	 
+	
 	$('a.navbutton').click(function(){
 		$('.navbar li.active').toggleClass('active');
 		$(this).parent().toggleClass('active');

@@ -33,6 +33,10 @@ footer {
 	}
 }
 
+.panel {
+	max-width: 600px;
+}
+
 /* prevents background from 'shifting' when modal opens and hides scrollbar */
 .modal-open {
 	overflow: scroll;

@@ -1,3 +1,4 @@
+<div class='container clearfix' style='height:150px'></div>
 <footer class='page-footer container-fluid text-right'>
 	<h6>&copy;[% page.copy %] &bull; [% page.author %] </h6>
 </footer>
