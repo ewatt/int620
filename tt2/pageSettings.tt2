@@ -1,0 +1,122 @@
+<!-- pageSettings -->
+<div id='pageSettings' class='sitepage center-block' style='display:none'>
+	<div class='panel panel-default'>
+		<div class='panel-heading'>
+			<h3>Settings</h3>
+		</div>
+		<div class='panel-body'>
+			
+			<!-- change password -->
+			<div class='panel panel-primary'>
+				<div class='panel-heading'>
+					<h4>Change Password</h4>
+				</div>
+				<div class='panel-body'>
+					<form action='' method='post' role='form' id='formChangePassword'>
+						<div class='form-group'>
+							<label for='changeOldPassword' class='control-label col-xs-2'>
+								<span class='glyphicon glyphicon-lock'></span>	
+							</label>
+							<div class='col-xs-10'>
+								<input type='password' class='form-control'
+									   name='changeOldPassword' id='changeOldPassword'
+									   spellcheck='off' placeholder='Old Password' />
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class='panel-footer clearfix'>
+					<div class='form-group pull-right'>
+						<button type='submit' form='formChangePassword'
+								class='form-control btn btn-primary'>Change Password</button>
+					</div>
+				</div>
+			</div>
+			
+			<!-- change profile picture -->
+			<div class='panel panel-info'>
+				<div class='panel-heading'>
+					<h4>Change Profile Picture</h4>
+				</div>
+				<div class='panel-body'>
+					<form action='' method='post' role='form' id='formChangeProfilePicture'>
+						<div class='form-group'>
+							<label for='changeOldPassword' class='control-label col-xs-2'>
+								<span class='glyphicon glyphicon-lock'></span>	
+							</label>
+							<div class='col-xs-10'>
+								<input type='password' class='form-control'
+									   name='changeOldPassword' id='changeOldPassword'
+									   spellcheck='off' placeholder='Old Password' />
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class='panel-footer clearfix'>
+					<div class='form-group pull-right'>
+						<button type='submit' form='formChangeProfilePicture'
+								class='form-control btn btn-info'>Change Profile Picture</button>
+					</div>
+				</div>
+			</div>
+			
+			<!-- set account private -->
+			<div class='panel panel-warning'>
+				<div class='panel-heading'>
+					<h4>Hide Account</h4>
+				</div>
+				<div class='panel-body'>
+					<form action='' method='post' role='form' id='formHideAccount'>
+						<div class='form-group'>
+							<label for='changeOldPassword' class='control-label col-xs-2'>
+								<span class='glyphicon glyphicon-lock'></span>	
+							</label>
+							<div class='col-xs-10'>
+								<input type='password' class='form-control'
+									   name='changeOldPassword' id='changeOldPassword'
+									   spellcheck='off' placeholder='Old Password' />
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class='panel-footer clearfix'>
+					<div class='form-group pull-right'>
+						<button type='submit' form='formHideAccount'
+								class='form-control btn btn-warning'>Hide Account</button>
+					</div>
+				</div>
+			</div>
+			
+			<!-- deactivate account -->
+			<div class='panel panel-danger'>
+				<div class='panel-heading'>
+					<h4>Deactivate Account</h4>
+				</div>
+				<div class='panel-body'>
+					<form action='' method='post' role='form' id='formCloseAccount'>
+						<div class='form-group'>
+							<label for='changeOldPassword' class='control-label col-xs-2'>
+								<span class='glyphicon glyphicon-lock'></span>	
+							</label>
+							<div class='col-xs-10'>
+								<input type='password' class='form-control'
+									   name='changeOldPassword' id='changeOldPassword'
+									   spellcheck='off' placeholder='Old Password' />
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class='panel-footer clearfix'>
+					<div class='form-group pull-right'>
+						<button type='submit' form='formCloseAccount'
+								class='form-control btn btn-danger'>Deactivate Account</button>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+		<div class='panel-footer'>
+			
+		</div>
+	</div>
+</div>

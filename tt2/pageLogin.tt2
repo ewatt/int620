@@ -1,0 +1,58 @@
+<!-- pageLogin -->
+<div id='pageLogin' class='sitepage center-block' style='display:none'>
+	<div class='panel panel-primary'>
+		<div class='panel-heading'>
+			<h3>Log In</h3>
+		</div>
+		<div class='panel-body'>
+			
+			<!-- error message divs -->
+			<div class='alert alert-danger fade in' id='loginIncomplete' style='display:none'>
+				<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+				Log In form is incomplete!
+			</div>
+			<div class='alert alert-danger fade in hidden' id='loginInvalid' style='display:none'>
+				<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+				Log In credentials are invalid!
+			</div>
+			<div class='alert alert-success fade in hidden' id='loginSuccess' style='display:none'>
+				<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+				Log In was successful!
+			</div>
+			
+			<!-- login form -->
+			<form action='' method='post' id='formLogin'
+				  class='form-horizontal' role='form'>
+				<div class='form-group'>
+					<label for='username' class='control-label col-xs-2'>
+						<span class='glyphicon glyphicon-user'></span>
+					</label>
+					<div class='col-xs-10'>						
+						<input type='text' class='form-control'
+							   name='username' id='login-username'
+							   autocomplete='off' placeholder='Username'
+							   autofocus='1' tabindex='1' />
+					</div>
+				</div>
+				<div class='form-group'>
+					<label for='password' class='control-label col-xs-2'>
+						<span class='glyphicon glyphicon-lock'></span>
+					</label>
+					<div class='col-xs-10'>
+						<input type='password' class='form-control'
+							   name='password' id='login-password'
+							   spellcheck='off' placeholder='Password'
+							   tabindex='2' />
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class='panel-footer clearfix'>
+			<div class='form-group pull-right'>
+				<button type='submit' form='formLogin'
+						class='form-control btn btn-primary'
+						tabindex='3'>Log In</button>
+			</div>
+		</div>
+	</div>
+</div>
