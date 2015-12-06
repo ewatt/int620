@@ -210,4 +210,41 @@ $(document).ready(function(){
 		}
 	});
 	
-});
+	$('form#formSendMessage').submit(function() {
+		var sendto = $('#sendto').val();
+		var subject = $('#subject').val();
+		var message = $('#message').val();
+		
+		alert("sendto: " + sendto + "\nsubject: " + subject + "\nmessage: " + message + "\n");
+		
+		if (sendto && subject && message) {
+			$.ajax({
+				type: "POST",
+				url: "/index.dhtml",
+				content: "application/x-www-form-urlencoded; charset=utf-8",
+				dataType: "json",
+				data: {"sendto":sendto, "subject":subject, "message":message },
+				error: function(XMLHttpRequest, textStatus, errorThrown) {
+					alert('error-bad-message-data');
+					$('div#messageInvalid').fadeIn();
+				},
+				success: function(data){
+					if (data.error) { // script returned error
+						alert('error-bad-message-results');
+						$('div#messageInvalid').fadeIn();
+					} //if
+					else { // search was successful
+						alert('success-message');
+						$('div#messageSuccess').fadeIn();
+					} //else
+				},
+			});
+		}
+		else {
+			$('div#messageIncomplete').fadeIn();
+		}
+		$('div#messageIncomplete').fadeIn();
+	}); // formSendMessage
+	
+	
+}); // document.ready
