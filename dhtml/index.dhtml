@@ -167,7 +167,7 @@ elsif ( $input{searchquery} ) {
 	warn "[!] search event" if $debug;
 	
 	if ( $input{searchquery} and $input{searchboolean} and $input{searchcategory} and $input{searchperpage} ) {
-		my $dbMusicbrainz = DBI->connect("DBI:postgresql:musicbrainz;192.168.50.111;5432",'musicbrainz','musicbrainz')
+		my $dbMusicbrainz = DBI->connect("DBI:Pg:dbname=musicbrainz;host=192.168.50.111;port=5432",'musicbrainz','musicbrainz')
 			or die $DBI::errstr;
 		
 		my $sqlQuery = qq~SELECT * FROM artist WHERE name = ?~;
