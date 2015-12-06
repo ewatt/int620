@@ -184,6 +184,23 @@ elsif ( $input{searchquery} ) {
 	
 	
 }
+# was sendmessage clicked?
+elsif ( $input{sendmessage} ) {
+	warn "[!] sendmessage event" if $debug;
+	
+	if ( $input{sendto} and $input{subject} and $input{message} ) {
+		if ( SendMessage( $session{username}, $input{sendto}, $input{subject}, $input{message} )) {
+			warn "[@] message was sent" if $debug;
+		}
+		else {
+			warn "[@] message was not sent" if $debug;
+		}
+	}
+	else {
+		warn "[-] invalid input" if $debug;
+	}
+	
+}
 # no expected input
 else {
 	warn "[!] no input";
