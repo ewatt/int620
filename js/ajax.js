@@ -1,8 +1,15 @@
 $(document).ready(function(){
 	
-	$('div#pageLogin').show();
-	$('div#pageSignup').show();
-	$('input#login-username').focus();
+	if ( $('input#access').val() == 'access') {
+		$('nav#loggedOut').hide();
+		$('nav#loggedIn').show();
+		$('div#pageProfile').show();
+	}
+	else {	
+		$('div#pageLogin').show();
+		$('div#pageSignup').show();
+		$('input#login-username').focus();
+	};
 	
 	// hide alerts when clicking any div
 	$('div').click(function(){

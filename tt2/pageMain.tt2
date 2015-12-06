@@ -4,6 +4,10 @@
 [% INCLUDE htmlHeader.tt2 %]
 [% INCLUDE pageHeader.tt2 %]
 
+[% IF session.access %]
+<input type='hidden' id='access' name='access' value='access' />
+[% END %]
+
 <div class='container-fluid text-left'>
 	<div class='row content'>
 		<div class='container center-block'>
