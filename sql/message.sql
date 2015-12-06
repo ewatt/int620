@@ -1,0 +1,10 @@
+CREATE TABLE db_project.tbl_messages (
+	id INT NOT NULL AUTO_INCREMENT,
+	sendto VARCHAR(45) NOT NULL,
+	subject VARCHAR(45) NOT NULL,
+	datesent TIMESTAMP NOT NULL,
+	message VARCHAR(512) NOT NULL,
+	PRIMARY KEY (id),
+	UNIQUE INDEX id_UNIQUE (id ASC)
+);
+COMMIT;
