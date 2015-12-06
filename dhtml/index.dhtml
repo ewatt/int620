@@ -394,7 +394,7 @@ sub ValidateSignup($$$) {
 		}
 	} else {
 		# the passwords are different
-		warn "[-] your password sucks" if $debug;
+		warn "[-] you suck at typing" if $debug;
 	}
 	
 	# return the result
