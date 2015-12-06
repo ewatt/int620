@@ -214,8 +214,9 @@ $(document).ready(function(){
 		var sendto = $('#sendto').val();
 		var subject = $('#subject').val();
 		var message = $('#message').val();
+		var sendmessage = $('#sendmessage').val();
 		
-		alert("sendto: " + sendto + "\nsubject: " + subject + "\nmessage: " + message + "\n");
+		alert("sendto: " + sendto + "\nsubject: " + subject + "\nmessage: " + message + "\nsendmessage: " + sendmessage + "\n");
 		
 		if (sendto && subject && message) {
 			$.ajax({
@@ -223,7 +224,7 @@ $(document).ready(function(){
 				url: "/index.dhtml",
 				content: "application/x-www-form-urlencoded; charset=utf-8",
 				dataType: "json",
-				data: {"sendto":sendto, "subject":subject, "message":message },
+				data: {"sendto":sendto, "subject":subject, "message":message, "sendmessage":sendmessage },
 				error: function(XMLHttpRequest, textStatus, errorThrown) {
 					alert('error-bad-message-data');
 					$('div#messageInvalid').fadeIn();

@@ -97,7 +97,7 @@
 						<a href='#save'><button form='sendMessage' name='saveButton' class='form-control btn btn-sm btn-info'>Save <span class='glyphicon glyphicon-floppy-disk'></span></button></a>
 					</div>
 					<div class='pull-right'>
-						<a href='#send'><button type='submit' form='sendMessage' name='sendButton' class='form-control btn btn-sm btn-primary'>Send <span class='glyphicon glyphicon-send'></span></button></a>
+						<a href='#send'><button type='submit' form='sendMessage' id='sendmessage' name='sendmessage' value='sendmessage' class='form-control btn btn-sm btn-primary'>Send <span class='glyphicon glyphicon-send'></span></button></a>
 					</div>
 				</div>
 			</div>
